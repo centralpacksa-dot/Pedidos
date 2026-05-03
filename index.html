@@ -9,7 +9,7 @@
 body {
   margin: 0;
   font-family: Arial;
-  background: #f5f5f5;
+  background: #f5e6d3;
 }
 
 /* HEADER */
@@ -24,7 +24,7 @@ body {
 /* BUSCADOR */
 .buscador {
   padding: 10px;
-  background: white;
+  background: #f5e6d3;
   position: sticky;
   top: 0;
   z-index: 10;
@@ -34,17 +34,20 @@ body {
   width: 100%;
   padding: 12px;
   border-radius: 10px;
-  border: 1px solid #ddd;
+  border: 1px solid #ccc;
   font-size: 16px;
 }
 
 /* PRODUCTOS */
+#productos {
+  padding-bottom: 120px; /* 🔥 espacio para el footer */
+}
+
 .producto {
-  background: white;
+  background: #ffffffcc;
   margin: 8px;
   border-radius: 12px;
   padding: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
 /* INFO */
@@ -86,13 +89,13 @@ body {
   border: 1px solid #ccc;
 }
 
-/* FOOTER TOTAL */
+/* FOOTER */
 .footer {
   position: fixed;
   bottom: 0;
   width: 100%;
-  background: white;
-  border-top: 1px solid #ddd;
+  background: #f5e6d3;
+  border-top: 1px solid #ccc;
   padding: 10px;
 }
 
@@ -134,6 +137,7 @@ body {
 
 let productos = [];
 let productosFiltrados = [];
+let cantidades = {}; // 🔥 guarda cantidades
 
 fetch("productos.json")
 .then(r => r.json())
@@ -148,6 +152,9 @@ function render(){
   cont.innerHTML = "";
 
   productosFiltrados.forEach((p,i)=>{
+    let key = p.nombre;
+    let cantidad = cantidades[key] || 0;
+
     cont.innerHTML += `
       <div class="producto">
         <div class="nombre">${p.nombre}</div>
@@ -155,33 +162,41 @@ function render(){
         ${p.unidad ? `<div class="precio">Unidad: $${p.unidad}</div>` : ""}
 
         <div class="control">
-          <button class="btn-cant" onclick="cambiar(${i},-1)">-</button>
-          <input class="input-cant" id="p${i}" value="0" oninput="calcular()">
-          <button class="btn-cant" onclick="cambiar(${i},1)">+</button>
+          <button class="btn-cant" onclick="cambiar('${key}',-1)">-</button>
+          <input class="input-cant" value="${cantidad}" oninput="setCantidad('${key}', this.value)">
+          <button class="btn-cant" onclick="cambiar('${key}',1)">+</button>
         </div>
       </div>
     `;
   });
 }
 
-function cambiar(i,v){
-  let input = document.getElementById("p"+i);
-  let val = parseInt(input.value)||0;
-  val += v;
-  if(val<0) val=0;
-  input.value = val;
+function cambiar(nombre,v){
+  let actual = cantidades[nombre] || 0;
+  actual += v;
+  if(actual < 0) actual = 0;
+  cantidades[nombre] = actual;
+  render();
+  calcular();
+}
+
+function setCantidad(nombre,val){
+  let num = parseInt(val)||0;
+  if(num < 0) num = 0;
+  cantidades[nombre] = num;
   calcular();
 }
 
 function calcular(){
   let total = 0;
 
-  productosFiltrados.forEach((p,i)=>{
-    let c = parseInt(document.getElementById("p"+i)?.value)||0;
+  productos.forEach(p=>{
+    let c = cantidades[p.nombre] || 0;
 
-    if(c>0){
+    if(c > 0){
       let packs = Math.floor(c/p.packCant);
-      let resto = c%p.packCant;
+      let resto = c % p.packCant;
+
       total += (packs*p.pack)+(resto*p.unidad);
     }
   });
@@ -192,14 +207,14 @@ function calcular(){
 function enviarPedido(){
   let msg="Pedido:%0A";
 
-  productosFiltrados.forEach((p,i)=>{
-    let c=document.getElementById("p"+i)?.value;
+  productos.forEach(p=>{
+    let c = cantidades[p.nombre] || 0;
     if(c>0){
       msg+=`- ${p.nombre}: ${c}%0A`;
     }
   });
 
-  msg+="%0ATotal: "+document.getElementById("total").innerText;
+  msg+="%0A"+document.getElementById("total").innerText;
 
   let tel="543865769832";
   window.open("https://wa.me/"+tel+"?text="+msg);
