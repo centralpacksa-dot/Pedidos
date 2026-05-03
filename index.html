@@ -2,107 +2,114 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Central Pack Pedidos</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Central Pack</title>
 
 <style>
 body {
   margin: 0;
   font-family: Arial;
-  background: #f2f2f2;
+  background: #f5f5f5;
 }
 
 /* HEADER */
 .header {
-  background: linear-gradient(90deg, #8b0000, #b30000);
+  background: #8b0000;
   color: white;
-  padding: 12px;
-  text-align: center;
-  font-weight: bold;
+  padding: 14px;
   font-size: 18px;
+  font-weight: bold;
 }
 
 /* BUSCADOR */
 .buscador {
-  padding: 6px;
+  padding: 10px;
   background: white;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .buscador input {
   width: 100%;
-  padding: 8px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  font-size: 16px;
 }
 
 /* PRODUCTOS */
 .producto {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   background: white;
-  padding: 6px 8px;
-  border-bottom: 1px solid #eee;
+  margin: 8px;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
 /* INFO */
-.info {
-  width: 65%;
-}
-
 .nombre {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: bold;
 }
 
 .precio {
-  font-size: 11px;
+  font-size: 13px;
   color: #8b0000;
 }
 
-/* CONTROLES */
+/* CONTROL */
 .control {
   display: flex;
+  justify-content: flex-end;
   align-items: center;
-  gap: 4px;
+  margin-top: 10px;
 }
 
 .btn-cant {
-  width: 32px;
-  height: 32px;
+  width: 45px;
+  height: 45px;
   border: none;
   background: #8b0000;
   color: white;
-  border-radius: 6px;
-  font-size: 16px;
+  border-radius: 10px;
+  font-size: 22px;
 }
 
 .input-cant {
-  width: 40px;
-  height: 32px;
+  width: 60px;
+  height: 45px;
   text-align: center;
+  font-size: 18px;
+  margin: 0 6px;
+  border-radius: 10px;
   border: 1px solid #ccc;
-  border-radius: 6px;
 }
 
-/* CARRITO */
-#carrito {
-  background: white;
-  padding: 8px;
-  position: sticky;
-  bottom: 60px;
-  font-size: 13px;
-}
-
-/* BOTON */
-.btn {
+/* FOOTER TOTAL */
+.footer {
   position: fixed;
   bottom: 0;
   width: 100%;
+  background: white;
+  border-top: 1px solid #ddd;
+  padding: 10px;
+}
+
+.total {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.btn {
+  width: 100%;
   background: #b30000;
   color: white;
-  padding: 12px;
+  padding: 14px;
   border: none;
-  font-size: 16px;
+  border-radius: 10px;
+  font-size: 18px;
+  margin-top: 6px;
 }
 </style>
 
@@ -110,9 +117,7 @@ body {
 
 <body>
 
-<div class="header">
-  CENTRAL PACK
-</div>
+<div class="header">Central Pack</div>
 
 <div class="buscador">
   <input type="text" placeholder="Buscar producto..." onkeyup="filtrar(this.value)">
@@ -120,13 +125,10 @@ body {
 
 <div id="productos"></div>
 
-<div id="carrito">
-  <b>Resumen:</b>
-  <div id="detalle"></div>
-  <div id="total"></div>
+<div class="footer">
+  <div class="total" id="total">Total: $0</div>
+  <button class="btn" onclick="enviarPedido()">Enviar Pedido</button>
 </div>
-
-<button class="btn" onclick="enviarPedido()">Enviar Pedido</button>
 
 <script>
 
@@ -134,29 +136,27 @@ let productos = [];
 let productosFiltrados = [];
 
 fetch("productos.json")
-.then(res => res.json())
+.then(r => r.json())
 .then(data => {
   productos = data;
   productosFiltrados = data;
   render();
 });
 
-function render() {
+function render(){
   let cont = document.getElementById("productos");
   cont.innerHTML = "";
 
   productosFiltrados.forEach((p,i)=>{
     cont.innerHTML += `
       <div class="producto">
-        <div class="info">
-          <div class="nombre">${p.nombre}</div>
-          ${p.pack > 0 ? `<div class="precio">Pack x${p.packCant}: $${p.pack}</div>` : ""}
-          ${p.unidad > 0 ? `<div class="precio">Unidad: $${p.unidad}</div>` : ""}
-        </div>
+        <div class="nombre">${p.nombre}</div>
+        ${p.pack ? `<div class="precio">📦 Pack x${p.packCant}: $${p.pack}</div>` : ""}
+        ${p.unidad ? `<div class="precio">Unidad: $${p.unidad}</div>` : ""}
 
         <div class="control">
           <button class="btn-cant" onclick="cambiar(${i},-1)">-</button>
-          <input class="input-cant" type="number" id="p${i}" value="0" oninput="calcular()">
+          <input class="input-cant" id="p${i}" value="0" oninput="calcular()">
           <button class="btn-cant" onclick="cambiar(${i},1)">+</button>
         </div>
       </div>
@@ -174,8 +174,7 @@ function cambiar(i,v){
 }
 
 function calcular(){
-  let total=0;
-  let detalle="";
+  let total = 0;
 
   productosFiltrados.forEach((p,i)=>{
     let c = parseInt(document.getElementById("p"+i)?.value)||0;
@@ -183,16 +182,11 @@ function calcular(){
     if(c>0){
       let packs = Math.floor(c/p.packCant);
       let resto = c%p.packCant;
-
-      let sub = (packs*p.pack)+(resto*p.unidad);
-      total+=sub;
-
-      detalle += `${p.nombre}: ${c} → $${sub.toFixed(0)}<br>`;
+      total += (packs*p.pack)+(resto*p.unidad);
     }
   });
 
-  document.getElementById("detalle").innerHTML=detalle;
-  document.getElementById("total").innerText="Total: $"+total.toFixed(0);
+  document.getElementById("total").innerText = "Total: $" + total;
 }
 
 function enviarPedido(){
@@ -205,15 +199,15 @@ function enviarPedido(){
     }
   });
 
-  msg+="%0A"+document.getElementById("total").innerText;
+  msg+="%0ATotal: "+document.getElementById("total").innerText;
 
   let tel="543865769832";
   window.open("https://wa.me/"+tel+"?text="+msg);
 }
 
-function filtrar(texto){
+function filtrar(txt){
   productosFiltrados = productos.filter(p =>
-    p.nombre.toLowerCase().includes(texto.toLowerCase())
+    p.nombre.toLowerCase().includes(txt.toLowerCase())
   );
   render();
 }
