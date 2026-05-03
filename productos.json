@@ -1,0 +1,32 @@
+[
+  {"nombre":"BANDEJA CARTON GRIS ECO Nº2","pack":2350,"unidad":27.03,"packCant":100},
+  {"nombre":"BANDEJA CARTON GRIS ECO Nº3","pack":2750,"unidad":31.63,"packCant":100},
+  {"nombre":"BANDEJA CARTON GRIS ECO Nº4","pack":3600,"unidad":41.40,"packCant":100},
+
+  {"nombre":"BANDEJA PP 102 CELPACK","pack":6950,"unidad":79.93,"packCant":100},
+  {"nombre":"BANDEJA PP 103 CELPACK","pack":9800,"unidad":112.70,"packCant":100},
+  {"nombre":"BANDEJA PP 105 CELPACK","pack":14700,"unidad":169.05,"packCant":100},
+  {"nombre":"BANDEJA PP 107 CELPACK","pack":21600,"unidad":248.40,"packCant":100},
+
+  {"nombre":"CAJA MEDIA PIZZA","pack":10900,"unidad":125.35,"packCant":100},
+  {"nombre":"CAJA MEDIA PIZZA PREMIUM","pack":14700,"unidad":169.05,"packCant":100},
+  {"nombre":"CAJA EMPANADAS X12","pack":14950,"unidad":171.93,"packCant":100},
+  {"nombre":"CAJA PIZZA MICROCORRUGADA 8 PORCIONES","pack":24000,"unidad":276,"packCant":100},
+
+  {"nombre":"CAJA HAMBURGUESA SIMPLE","pack":20000,"unidad":230,"packCant":100},
+  {"nombre":"CAJA HAMBURGUESA + PAPAS","pack":23400,"unidad":269.10,"packCant":100},
+
+  {"nombre":"CAJA LOMO GRANDE","pack":11800,"unidad":135.70,"packCant":100},
+  {"nombre":"CAJA LOMO CHICA","pack":8350,"unidad":96.03,"packCant":100},
+
+  {"nombre":"POTE HELADO 250CC","pack":5600,"unidad":56,"packCant":100},
+  {"nombre":"POTE HELADO 500CC","pack":9200,"unidad":92,"packCant":100},
+  {"nombre":"POTE HELADO 1000CC","pack":13500,"unidad":135,"packCant":100},
+
+  {"nombre":"SERVILLETAS X1000","pack":8000,"unidad":8,"packCant":1000},
+
+  {"nombre":"FILM PVC 30CM","pack":0,"unidad":1300,"packCant":1},
+  {"nombre":"ROLLO ALUMINIO INDUSTRIAL","pack":0,"unidad":12000,"packCant":1},
+
+  {"nombre":"GUANTES NITRILO NEGRO X100","pack":0,"unidad":8000,"packCant":1}
+]
