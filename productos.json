@@ -1,20 +1,23 @@
 [
-  {"nombre":"BANDEJA CARTON GRIS ECO Nº2","pack":2350,"unidad":27.03,"packCant":100},
-  {"nombre":"BANDEJA CARTON GRIS ECO Nº3","pack":2750,"unidad":31.63,"packCant":100},
-  {"nombre":"BANDEJA CARTON GRIS ECO Nº4","pack":3600,"unidad":41.40,"packCant":100},
+  {"nombre":"BANDEJA CARTON Nº2","pack":2350,"unidad":27.03,"packCant":100},
+  {"nombre":"BANDEJA CARTON Nº3","pack":2750,"unidad":31.63,"packCant":100},
+  {"nombre":"BANDEJA CARTON Nº4","pack":3600,"unidad":41.40,"packCant":100},
 
-  {"nombre":"BANDEJA PP 102 CELPACK","pack":6950,"unidad":79.93,"packCant":100},
-  {"nombre":"BANDEJA PP 103 CELPACK","pack":9800,"unidad":112.70,"packCant":100},
-  {"nombre":"BANDEJA PP 105 CELPACK","pack":14700,"unidad":169.05,"packCant":100},
-  {"nombre":"BANDEJA PP 107 CELPACK","pack":21600,"unidad":248.40,"packCant":100},
+  {"nombre":"BANDEJA PP 102","pack":6950,"unidad":79.93,"packCant":100},
+  {"nombre":"BANDEJA pp 103","pack":9800,"unidad":112.70,"packCant":100},
+  {"nombre":"BANDEJA PP 105 OVAL","pack":14700,"unidad":169.05,"packCant":100},
+  {"nombre":"BANDEJA PP 107","pack":21600,"unidad":248.40,"packCant":100},
 
-  {"nombre":"CAJA MEDIA PIZZA","pack":10900,"unidad":125.35,"packCant":100},
-  {"nombre":"CAJA MEDIA PIZZA PREMIUM","pack":14700,"unidad":169.05,"packCant":100},
-  {"nombre":"CAJA EMPANADAS X12","pack":14950,"unidad":171.93,"packCant":100},
+  {"nombre":"CAJA GRIS MEDIA PIZZA","pack":10900,"unidad":125.35,"packCant":100},
+  {"nombre":"CAJA GRIS MEDIA PIZZA REFORZADA","pack":14700,"unidad":169.05,"packCant":100},
+  {"nombre":"CAJA GRIS EMPANADAS X12","pack":14950,"unidad":171.93,"packCant":100},
   {"nombre":"CAJA PIZZA MICROCORRUGADA 8 PORCIONES","pack":24000,"unidad":276,"packCant":100},
-
-  {"nombre":"CAJA HAMBURGUESA SIMPLE","pack":20000,"unidad":230,"packCant":100},
-  {"nombre":"CAJA HAMBURGUESA + PAPAS","pack":23400,"unidad":269.10,"packCant":100},
+  {"nombre":"CAJA PIZZA GRIS SIMPLE","pack":12700,"unidad":146.05,"packCant":100},
+  {"nombre":"CAJA PIZZA GRIS INTERMEDIA","pack":15100,"unidad":173.65,"packCant":100},
+  {"nombre":"CAJA PIZZA GRIS REFORZADA","pack":17400,"unidad":200.10,"packCant":100},
+  
+  {"nombre":"CAJA MICROCORRUGADA HAMBURGUESA SIMPLE","pack":20000,"unidad":230,"packCant":100},
+  {"nombre":"CAJA MICROCORRUGADA HAMBURGUESA + PAPAS","pack":23400,"unidad":269.10,"packCant":100},
 
   {"nombre":"CAJA LOMO GRANDE","pack":11800,"unidad":135.70,"packCant":100},
   {"nombre":"CAJA LOMO CHICA","pack":8350,"unidad":96.03,"packCant":100},
