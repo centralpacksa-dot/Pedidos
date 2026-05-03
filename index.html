@@ -13,11 +13,8 @@ body {
   overflow-x: hidden;
 }
 
-*{
-  box-sizing: border-box;
-}
+*{ box-sizing: border-box; }
 
-/* HEADER */
 .header {
   background: #8b0000;
   color: white;
@@ -29,10 +26,7 @@ body {
   z-index: 10;
 }
 
-/* BUSCADOR */
-.buscador {
-  padding: 10px;
-}
+.buscador { padding: 10px; }
 
 .buscador input {
   width: 100%;
@@ -42,10 +36,7 @@ body {
   outline: none;
 }
 
-/* PRODUCTOS */
-#productos {
-  padding-bottom: 160px;
-}
+#productos { padding-bottom: 160px; }
 
 .producto {
   background: #fff;
@@ -55,14 +46,9 @@ body {
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
-.nombre {
-  font-weight: bold;
-}
+.nombre { font-weight: bold; }
 
-.precio {
-  color: #8b0000;
-  font-size: 13px;
-}
+.precio { color: #8b0000; font-size: 13px; }
 
 .control {
   display: flex;
@@ -89,7 +75,6 @@ body {
   border: 1px solid #ddd;
 }
 
-/* FLOAT CART */
 .carrito-btn {
   position: fixed;
   bottom: 20px;
@@ -104,7 +89,6 @@ body {
   z-index: 20;
 }
 
-/* BACKDROP */
 .backdrop {
   position: fixed;
   inset: 0;
@@ -113,7 +97,6 @@ body {
   z-index: 30;
 }
 
-/* PANEL FIX MOBILE FULL WIDTH REAL */
 .carrito-panel {
   position: fixed;
   bottom: 0;
@@ -123,16 +106,14 @@ body {
   max-height: 85vh;
   background: white;
   border-radius: 20px 20px 0 0;
-  padding: 15px 15px 25px 15px;
+  padding: 15px;
   overflow-y: auto;
   transform: translateY(100%);
   transition: 0.3s ease;
   z-index: 40;
 }
 
-.carrito-panel.active {
-  transform: translateY(0);
-}
+.carrito-panel.active { transform: translateY(0); }
 
 .carrito-head {
   display: flex;
@@ -143,16 +124,6 @@ body {
   top: 0;
   background: white;
   padding: 10px 0;
-  z-index: 2;
-}
-
-.carrito-head button {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  border: none;
-  background: #eee;
-  font-size: 18px;
 }
 
 .carrito-item {
@@ -191,16 +162,17 @@ body {
   border-radius: 6px;
 }
 
-.eliminar {
-  color: red;
-  font-size: 12px;
-  cursor: pointer;
+.eliminar-btn {
+  background: red;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  margin-top: 4px;
 }
 
-.envio {
-  font-size: 13px;
-  margin-top: 10px;
-}
+.envio { font-size: 13px; margin-top: 10px; }
 
 .btn {
   width: 100%;
@@ -224,9 +196,7 @@ body {
 
 <div id="productos"></div>
 
-<button class="carrito-btn" onclick="toggleCarrito()">
-🛒 <span id="count">0</span>
-</button>
+<button class="carrito-btn" onclick="toggleCarrito()">🛒 <span id="count">0</span></button>
 
 <div class="backdrop" id="backdrop" onclick="toggleCarrito()"></div>
 
@@ -245,15 +215,13 @@ body {
 </div>
 
 <script>
-let productos = [];
-let productosFiltrados = [];
-let cantidades = JSON.parse(localStorage.getItem("pedido")) || {};
+let productos=[];
+let cantidades=JSON.parse(localStorage.getItem("pedido"))||{};
 
 fetch("productos.json")
 .then(r=>r.json())
 .then(data=>{
   productos=data;
-  productosFiltrados=data;
   actualizar();
 });
 
@@ -261,13 +229,13 @@ function render(){
   let cont=document.getElementById("productos");
   cont.innerHTML="";
 
-  productosFiltrados.forEach(p=>{
+  productos.forEach(p=>{
     let c=cantidades[p.nombre]||0;
 
     cont.innerHTML+=`
     <div class="producto">
       <div class="nombre">${p.nombre}</div>
-      ${p.pack?`<div class="precio">Pack: $${p.pack}</div>`:""}
+      ${p.pack?`<div class="precio">Pack (${p.packCant}): $${p.pack}</div>`:""}
       ${p.unidad?`<div class="precio">Unidad: $${p.unidad}</div>`:""}
 
       <div class="control">
@@ -287,14 +255,12 @@ function cambiar(n,v){
   actualizar();
 }
 
-// FIX 1: no rompe teclado porque NO re-renderiza DOM del carrito
 function setCantidad(n,val){
   let num=parseInt(val)||0;
   if(num<0)num=0;
   cantidades[n]=num;
-
   calcularSolo();
-  localStorage.setItem("pedido", JSON.stringify(cantidades));
+  localStorage.setItem("pedido",JSON.stringify(cantidades));
 }
 
 function eliminar(n){
@@ -305,18 +271,17 @@ function eliminar(n){
 function actualizar(){
   render();
   calcularFull();
-  localStorage.setItem("pedido", JSON.stringify(cantidades));
+  localStorage.setItem("pedido",JSON.stringify(cantidades));
 }
 
-// SOLO recalcula sin tocar HTML del carrito (FIX teclado)
+// COUNT FIX (productos distintos)
 function calcularSolo(){
   let total=0;
-  let count=0;
+  let count=Object.keys(cantidades).filter(k=>cantidades[k]>0).length;
 
   productos.forEach(p=>{
     let c=cantidades[p.nombre]||0;
     if(c>0){
-      count+=c;
       total+=c*(p.unidad||0);
     }
   });
@@ -330,7 +295,6 @@ function calcularSolo(){
     : "✅ Envío gratis";
 }
 
-// SOLO cuando se abre o cambia fuerte
 function calcularFull(){
   calcularSolo();
 
@@ -345,7 +309,7 @@ function calcularFull(){
       <div class="carrito-item">
         <div class="item-info">
           ${p.nombre}<br>x${c} - $${sub}
-          <div class="eliminar" onclick="eliminar('${p.nombre}')">Eliminar</div>
+          <div class="eliminar-btn" onclick="eliminar('${p.nombre}')">Eliminar</div>
         </div>
         <div class="item-control">
           <button onclick="cambiar('${p.nombre}',-1)">-</button>
@@ -379,6 +343,7 @@ function guardarPedido(){
   alert("Pedido guardado ✔️");
 }
 
+// WHATSAPP FIX
 function enviarPedido(){
   let msg="Pedido:%0A";
 
@@ -389,26 +354,16 @@ function enviarPedido(){
     }
   });
 
-  msg+="%0ATotal: "+document.getElementById("total").innerText;
+  let totalTexto=document.getElementById("total").innerText.replace("Total: ","");
+  msg+="%0ATotal: "+totalTexto;
 
   window.open("https://wa.me/543865769832?text="+msg);
 }
 
 function filtrar(t){
-  productosFiltrados=productos.filter(p=>
-    p.nombre.toLowerCase().includes(t.toLowerCase())
-  );
+  productosFiltrados=productos.filter(p=>p.nombre.toLowerCase().includes(t.toLowerCase()));
   render();
 }
-function vaciarCarrito(){
-  const confirmar = confirm("¿Seguro que quieres vaciar el carrito?");
-  if(!confirmar) return;
-
-  cantidades = {};
-  localStorage.removeItem("pedido");
-  actualizar();
-}
-
 </script>
 
 </body>
