@@ -2,175 +2,214 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Pedidos Central Pack</title>
+<title>Central Pack Pedidos</title>
 
 <style>
 body {
+  margin: 0;
   font-family: Arial;
-  background: #f2f2f2;
+  background: #f5e6d3;
+}
+
+/* HEADER */
+.header {
+  background: #8b0000;
+  color: white;
+  padding: 15px;
+  text-align: center;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+/* BUSCADOR */
+.buscador {
+  padding: 10px;
+  background: #fff;
+}
+
+.buscador input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+/* PRODUCTOS */
+#productos {
   padding: 10px;
 }
 
-h1 {
-  text-align: center;
-}
-
 .producto {
-  background: #fff;
+  background: white;
+  border-radius: 12px;
   padding: 12px;
-  margin: 8px 0;
-  border-radius: 10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
 .nombre {
   font-weight: bold;
-  font-size: 14px;
+  margin-bottom: 5px;
 }
 
 .precio {
-  font-size: 13px;
-  color: #444;
+  color: #8b0000;
+  font-size: 14px;
 }
 
-.cantidad {
+/* CONTROLES */
+.control {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-}
-
-.cantidad button {
-  width: 30px;
-  height: 30px;
-  border: none;
-  background: black;
-  color: white;
-  border-radius: 5px;
-}
-
-.cantidad input {
-  width: 40px;
-  text-align: center;
-  margin: 0 5px;
-}
-
-button {
-  width: 100%;
-  padding: 12px;
   margin-top: 10px;
-  border: none;
-  background: black;
-  color: white;
-  border-radius: 8px;
 }
 
-#carrito {
-  background: #fff;
+.control button {
+  background: #8b0000;
+  color: white;
+  border: none;
+  width: 35px;
+  height: 35px;
+  border-radius: 8px;
+  font-size: 18px;
+}
+
+.control input {
+  width: 50px;
+  text-align: center;
+  font-size: 16px;
+}
+
+/* BOTON */
+.btn {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background: #b30000;
+  color: white;
   padding: 15px;
-  margin-top: 20px;
+  border: none;
+  font-size: 18px;
+}
+
+/* CARRITO */
+#carrito {
+  padding: 10px;
+  background: white;
+  margin: 10px;
   border-radius: 10px;
 }
 </style>
 
 </head>
+
 <body>
 
-<h1>Hacer Pedido</h1>
+<div class="header">
+  CENTRAL PACK
+</div>
+
+<div class="buscador">
+  <input type="text" placeholder="Buscar producto..." onkeyup="filtrar(this.value)">
+</div>
 
 <div id="productos"></div>
 
-<button onclick="calcularPedido()">Actualizar Pedido</button>
-
 <div id="carrito">
-  <h2>Resumen</h2>
+  <b>Resumen:</b>
   <div id="detalle"></div>
   <div id="total"></div>
-  <button onclick="enviarPedido()">Enviar Pedido</button>
 </div>
+
+<button class="btn" onclick="enviarPedido()">Enviar Pedido</button>
 
 <script>
 
 let productos = [];
+let productosFiltrados = [];
 
 fetch("productos.json")
-  .then(res => res.json())
-  .then(data => {
-    productos = data;
-    renderProductos();
-  });
+.then(res => res.json())
+.then(data => {
+  productos = data;
+  productosFiltrados = data;
+  render();
+});
 
-function renderProductos() {
+function render() {
   let cont = document.getElementById("productos");
   cont.innerHTML = "";
 
-  productos.forEach((p, i) => {
+  productosFiltrados.forEach((p,i)=>{
     cont.innerHTML += `
       <div class="producto">
-        <div class="info">
-          <div class="nombre">${p.nombre}</div>
-          ${p.pack > 0 ? `<div class="precio">📦 Pack x${p.packCant}: $${p.pack}</div>` : ""}
-          ${p.unidad > 0 ? `<div class="precio">🧩 Unidad: $${p.unidad}</div>` : ""}
-        </div>
+        <div class="nombre">${p.nombre}</div>
+        ${p.pack > 0 ? `<div class="precio">📦 Pack x${p.packCant}: $${p.pack}</div>` : ""}
+        ${p.unidad > 0 ? `<div class="precio">🧩 Unidad: $${p.unidad}</div>` : ""}
 
-        <div class="cantidad">
-          <button onclick="cambiar(${i}, -1)">-</button>
-          <input type="number" id="p${i}" value="0" min="0">
-          <button onclick="cambiar(${i}, 1)">+</button>
+        <div class="control">
+          <button onclick="cambiar(${i},-1)">-</button>
+          <input type="number" id="p${i}" value="0">
+          <button onclick="cambiar(${i},1)">+</button>
         </div>
       </div>
     `;
   });
 }
 
-function cambiar(i, valor) {
-  let input = document.getElementById("p" + i);
-  let actual = parseInt(input.value) || 0;
-  let nuevo = actual + valor;
-  if (nuevo < 0) nuevo = 0;
-  input.value = nuevo;
+function cambiar(i,v){
+  let input = document.getElementById("p"+i);
+  let val = parseInt(input.value)||0;
+  val += v;
+  if(val<0) val=0;
+  input.value = val;
+  calcular();
 }
 
-function calcularPedido() {
-  let total = 0;
-  let detalle = "";
+function calcular(){
+  let total=0;
+  let detalle="";
 
-  productos.forEach((p, i) => {
-    let cantidad = parseInt(document.getElementById("p"+i).value) || 0;
+  productosFiltrados.forEach((p,i)=>{
+    let c = parseInt(document.getElementById("p"+i)?.value)||0;
 
-    if (cantidad > 0) {
-      let packs = Math.floor(cantidad / p.packCant);
-      let resto = cantidad % p.packCant;
+    if(c>0){
+      let packs = Math.floor(c/p.packCant);
+      let resto = c%p.packCant;
 
-      let subtotal = (packs * p.pack) + (resto * p.unidad);
+      let sub = (packs*p.pack)+(resto*p.unidad);
+      total+=sub;
 
-      total += subtotal;
-
-      detalle += `${p.nombre}: ${cantidad} → $${subtotal.toFixed(2)}<br>`;
+      detalle += `${p.nombre}: ${c} → $${sub}<br>`;
     }
   });
 
-  document.getElementById("detalle").innerHTML = detalle;
-  document.getElementById("total").innerText = "Total: $" + total.toFixed(2);
+  document.getElementById("detalle").innerHTML=detalle;
+  document.getElementById("total").innerText="Total: $"+total;
 }
 
-function enviarPedido() {
-  let mensaje = "Pedido:%0A";
+function enviarPedido(){
+  let msg="Pedido:%0A";
 
-  productos.forEach((p, i) => {
-    let cantidad = document.getElementById("p"+i).value;
-
-    if (cantidad > 0) {
-      mensaje += `- ${p.nombre}: ${cantidad}%0A`;
+  productosFiltrados.forEach((p,i)=>{
+    let c=document.getElementById("p"+i)?.value;
+    if(c>0){
+      msg+=`- ${p.nombre}: ${c}%0A`;
     }
   });
 
-  mensaje += "%0A" + document.getElementById("total").innerText;
+  msg+="%0A"+document.getElementById("total").innerText;
 
-  let telefono = "5493865769832";
-  let url = "https://wa.me/" + telefono + "?text=" + mensaje;
+  let tel="543865769832";
+  window.open("https://wa.me/"+tel+"?text="+msg);
+}
 
-  window.open(url, "_blank");
+function filtrar(texto){
+  productosFiltrados = productos.filter(p =>
+    p.nombre.toLowerCase().includes(texto.toLowerCase())
+  );
+  render();
 }
 
 </script>
