@@ -1,84 +1,3 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Central Pack</title>
-
-<style>
-body {
-  margin: 0;
-  font-family: Arial;
-  background: #f5e6d3;
-}
-
-/* HEADER */
-.header {
-  background: #8b0000;
-  color: white;
-  padding: 14px;
-  font-size: 18px;
-  font-weight: bold;
-}
-
-/* BUSCADOR */
-.buscador {
-  padding: 10px;
-}
-
-.buscador input {
-  width: 100%;
-  padding: 12px;
-  border-radius: 10px;
-  border: 1px solid #ccc;
-}
-
-/* PRODUCTOS */
-#productos {
-  padding-bottom: 140px;
-}
-
-.producto {
-  background: #ffffffcc;
-  margin: 8px;
-  border-radius: 12px;
-  padding: 12px;
-}
-
-.nombre {
-  font-weight: bold;
-}
-
-.precio {
-  color: #8b0000;
-  font-size: 13px;
-}
-
-/* CONTROL */
-.control {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 8px;
-}
-
-.btn-cant {
-  width: 42px;
-  height: 42px;
-  border: none;
-  background: #8b0000;
-  color: white;
-  border-radius: 10px;
-  font-size: 20px;
-}
-
-.input-cant {
-  width: 55px;
-  height: 42px;
-  text-align: center;
-  margin: 0 5px;
-  border-radius: 8px;
-}
-
 /* BOTON CARRITO */
 .carrito-btn {
   position: fixed;
@@ -102,6 +21,21 @@ body {
   padding: 15px;
   overflow-y: auto;
   display: none;
+}
+
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.panel-toggle {
+  background: transparent;
+  border: 1px solid #8b0000;
+  color: #8b0000;
+  border-radius: 8px;
+  padding: 6px 10px;
 }
 
 .carrito-item {
@@ -129,29 +63,7 @@ body {
   border: none;
   border-radius: 6px;
 }
-
-.item-control input {
-  width: 40px;
-  text-align: center;
-  margin: 0 4px;
-}
-
-.eliminar {
-  color: red;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-/* MENSAJE */
-.envio {
-  font-size: 13px;
-  margin-top: 10px;
-  color: #444;
-}
-
-/* BOTON FINAL */
-.btn {
-  width: 100%;
+@@ -155,179 +170,187 @@ body {
   background: #b30000;
   color: white;
   padding: 14px;
@@ -178,6 +90,10 @@ body {
 
 <div class="carrito-panel" id="panel">
   <h3>Tu pedido</h3>
+  <div class="panel-head">
+    <h3>Tu pedido</h3>
+    <button class="panel-toggle" onclick="toggleCarrito()">Ocultar</button>
+  </div>
   <div id="detalle"></div>
   <div id="total"></div>
   <div class="envio" id="envio"></div>
@@ -216,6 +132,7 @@ function render(){
       <div class="control">
         <button class="btn-cant" onclick="cambiar('${p.nombre}',-1)">-</button>
         <input class="input-cant" value="${c}" oninput="setCantidad('${p.nombre}',this.value)">
+        <input class="input-cant" value="${c}" oninput="setCantidad('${p.nombre}',this.value,false)">
         <button class="btn-cant" onclick="cambiar('${p.nombre}',1)">+</button>
       </div>
     </div>`;
@@ -231,10 +148,17 @@ function cambiar(n,v){
 }
 
 function setCantidad(n,val){
+function setCantidad(n,val,renderizar=true){
   let num=parseInt(val)||0;
   if(num<0)num=0;
   cantidades[n]=num;
   actualizar();
+  if(renderizar){
+    actualizar();
+  } else {
+    calcular();
+    localStorage.setItem("pedido", JSON.stringify(cantidades));
+  }
 }
 
 function eliminar(n){
@@ -276,6 +200,7 @@ function calcular(){
         <div class="item-control">
           <button onclick="cambiar('${p.nombre}',-1)">-</button>
           <input value="${c}" oninput="setCantidad('${p.nombre}',this.value)">
+          <input value="${c}" oninput="setCantidad('${p.nombre}',this.value,false)">
           <button onclick="cambiar('${p.nombre}',1)">+</button>
         </div>
       </div>`;
@@ -316,6 +241,7 @@ function enviarPedido(){
   });
 
   msg+="%0ATotal: "+document.getElementById("total").innerText;
+  msg+="%0A"+document.getElementById("total").innerText;
 
   window.open("https://wa.me/543865769832?text="+msg);
 }
