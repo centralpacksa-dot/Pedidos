@@ -1,8 +1,8 @@
->
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Pedidos Distribuidora</title>
+<title>Pedidos Central Pack</title>
 
 <style>
 body {
@@ -17,15 +17,17 @@ h1 {
 
 .producto {
   background: #fff;
-  padding: 15px;
-  margin: 10px 0;
-  border-radius: 10px;
+  padding: 10px;
+  margin: 8px 0;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 input {
   width: 60px;
   padding: 5px;
-  margin-left: 10px;
 }
 
 button {
@@ -43,11 +45,6 @@ button {
   margin-top: 20px;
   border-radius: 10px;
 }
-
-.total {
-  font-weight: bold;
-  margin-top: 10px;
-}
 </style>
 
 </head>
@@ -55,85 +52,106 @@ button {
 
 <h1>Hacer Pedido</h1>
 
-<div class="producto">
-  Caja de Pizza ($500)
-  <input type="number" id="p1" min="0" value="0">
-</div>
+<div id="productos"></div>
 
-<div class="producto">
-  Bandeja 103 ($300)
-  <input type="number" id="p2" min="0" value="0">
-</div>
-
-<div class="producto">
-  Guantes ($200)
-  <input type="number" id="p3" min="0" value="0">
-</div>
-
-<button onclick="generarCarrito()">Actualizar Pedido</button>
+<button onclick="calcularPedido()">Actualizar Pedido</button>
 
 <div id="carrito">
   <h2>Resumen</h2>
   <div id="detalle"></div>
-  <div class="total" id="total"></div>
+  <div id="total"></div>
   <button onclick="enviarPedido()">Enviar Pedido</button>
 </div>
 
 <script>
+
 let productos = [
-  {nombre: "Caja de Pizza", precio: 500, input: "p1"},
-  {nombre: "Bandeja 103", precio: 300, input: "p2"},
-  {nombre: "Guantes", precio: 200, input: "p3"}
+  {nombre:"BANDEJA CARTON Nº2", pack:2350, unidad:27.03, packCant:100},
+  {nombre:"BANDEJA CARTON Nº3", pack:2750, unidad:31.63, packCant:100},
+  {nombre:"BANDEJA CARTON Nº4", pack:3600, unidad:41.40, packCant:100},
+  {nombre:"BANDEJA PP 102", pack:6950, unidad:79.93, packCant:100},
+  {nombre:"BANDEJA PP 103", pack:9800, unidad:112.70, packCant:100},
+  {nombre:"BANDEJA PP 105", pack:14700, unidad:169.05, packCant:100},
+  {nombre:"BANDEJA PP 107", pack:21600, unidad:248.40, packCant:100},
+
+  {nombre:"CAJA MEDIA PIZZA", pack:10900, unidad:125.35, packCant:100},
+  {nombre:"CAJA MEDIA PIZZA PREMIUM", pack:14700, unidad:169.05, packCant:100},
+  {nombre:"CAJA EMPANADAS X12", pack:14950, unidad:171.93, packCant:100},
+  {nombre:"CAJA PIZZA MICRO 8P", pack:24000, unidad:276, packCant:100},
+
+  {nombre:"CAJA HAMBURGUESA", pack:20000, unidad:230, packCant:100},
+  {nombre:"CAJA HAMB + PAPAS", pack:23400, unidad:269.10, packCant:100},
+
+  {nombre:"CAJA LOMO GRANDE", pack:11800, unidad:135.70, packCant:100},
+  {nombre:"CAJA LOMO CHICA", pack:8350, unidad:96.03, packCant:100},
+
+  {nombre:"GUANTES NITRILO", pack:0, unidad:8000, packCant:1},
+  {nombre:"FILM PVC", pack:0, unidad:1300, packCant:1},
+  {nombre:"ROLLO ALUMINIO", pack:0, unidad:12000, packCant:1},
+
+  {nombre:"SERVILLETAS X1000", pack:0, unidad:8000, packCant:1},
+
+  {nombre:"POTE HELADO 250", pack:0, unidad:5600, packCant:1},
+  {nombre:"POTE HELADO 500", pack:0, unidad:9200, packCant:1},
+  {nombre:"POTE HELADO 1000", pack:0, unidad:13500, packCant:1}
 ];
 
-let pedido = [];
+// GENERAR PRODUCTOS EN PANTALLA
+let contenedor = document.getElementById("productos");
 
-function generarCarrito() {
-  pedido = [];
-  let detalle = "";
+productos.forEach((p, i) => {
+  contenedor.innerHTML += `
+    <div class="producto">
+      <span>${p.nombre}</span>
+      <input type="number" id="p${i}" min="0" value="0">
+    </div>
+  `;
+});
+
+// CALCULO
+function calcularPedido() {
   let total = 0;
+  let detalle = "";
 
-  productos.forEach(p => {
-    let cantidad = document.getElementById(p.input).value;
+  productos.forEach((p, i) => {
+    let cantidad = parseInt(document.getElementById("p"+i).value) || 0;
 
     if (cantidad > 0) {
-      let subtotal = cantidad * p.precio;
+      let packs = Math.floor(cantidad / p.packCant);
+      let resto = cantidad % p.packCant;
+
+      let subtotal = (packs * p.pack) + (resto * p.unidad);
+
       total += subtotal;
 
-      pedido.push({
-        nombre: p.nombre,
-        cantidad: cantidad,
-        subtotal: subtotal
-      });
-
-      detalle += `${p.nombre} x${cantidad} = $${subtotal}<br>`;
+      detalle += `${p.nombre}: ${cantidad} → $${subtotal.toFixed(2)}<br>`;
     }
   });
 
   document.getElementById("detalle").innerHTML = detalle;
-  document.getElementById("total").innerText = "Total: $" + total;
+  document.getElementById("total").innerText = "Total: $" + total.toFixed(2);
 }
 
+// WHATSAPP
 function enviarPedido() {
-  if (pedido.length === 0) {
-    alert("Agregá productos primero");
-    return;
-  }
+  let mensaje = "Pedido:%0A";
 
-  let mensaje = "Hola, quiero hacer este pedido:%0A%0A";
+  productos.forEach((p, i) => {
+    let cantidad = document.getElementById("p"+i).value;
 
-  pedido.forEach(p => {
-    mensaje += `- ${p.nombre} x${p.cantidad} ($${p.subtotal})%0A`;
+    if (cantidad > 0) {
+      mensaje += `- ${p.nombre}: ${cantidad}%0A`;
+    }
   });
 
-  let totalTexto = document.getElementById("total").innerText;
-  mensaje += "%0A" + totalTexto;
+  mensaje += "%0A" + document.getElementById("total").innerText;
 
   let telefono = "+5493865769832";
   let url = "https://wa.me/" + telefono + "?text=" + mensaje;
 
   window.open(url, "_blank");
 }
+
 </script>
 
 </body>
