@@ -8,7 +8,7 @@
 body {
   font-family: Arial;
   background: #f2f2f2;
-  padding: 15px;
+  padding: 10px;
 }
 
 h1 {
@@ -17,26 +17,52 @@ h1 {
 
 .producto {
   background: #fff;
-  padding: 10px;
+  padding: 12px;
   margin: 8px 0;
-  border-radius: 8px;
+  border-radius: 10px;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-input {
-  width: 60px;
-  padding: 5px;
+.nombre {
+  font-weight: bold;
+  font-size: 14px;
 }
 
-button {
-  padding: 10px;
-  margin-top: 10px;
+.precio {
+  font-size: 13px;
+  color: #444;
+}
+
+.cantidad {
+  display: flex;
+  align-items: center;
+}
+
+.cantidad button {
+  width: 30px;
+  height: 30px;
   border: none;
   background: black;
   color: white;
   border-radius: 5px;
+}
+
+.cantidad input {
+  width: 40px;
+  text-align: center;
+  margin: 0 5px;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  border: none;
+  background: black;
+  color: white;
+  border-radius: 8px;
 }
 
 #carrito {
@@ -65,50 +91,46 @@ button {
 
 <script>
 
-let productos = [
-  {nombre:"BANDEJA CARTON Nº2", pack:2350, unidad:27.03, packCant:100},
-  {nombre:"BANDEJA CARTON Nº3", pack:2750, unidad:31.63, packCant:100},
-  {nombre:"BANDEJA CARTON Nº4", pack:3600, unidad:41.40, packCant:100},
-  {nombre:"BANDEJA PP 102", pack:6950, unidad:79.93, packCant:100},
-  {nombre:"BANDEJA PP 103", pack:9800, unidad:112.70, packCant:100},
-  {nombre:"BANDEJA PP 105", pack:14700, unidad:169.05, packCant:100},
-  {nombre:"BANDEJA PP 107", pack:21600, unidad:248.40, packCant:100},
+let productos = [];
 
-  {nombre:"CAJA MEDIA PIZZA", pack:10900, unidad:125.35, packCant:100},
-  {nombre:"CAJA MEDIA PIZZA PREMIUM", pack:14700, unidad:169.05, packCant:100},
-  {nombre:"CAJA EMPANADAS X12", pack:14950, unidad:171.93, packCant:100},
-  {nombre:"CAJA PIZZA MICRO 8P", pack:24000, unidad:276, packCant:100},
+fetch("productos.json")
+  .then(res => res.json())
+  .then(data => {
+    productos = data;
+    renderProductos();
+  });
 
-  {nombre:"CAJA HAMBURGUESA", pack:20000, unidad:230, packCant:100},
-  {nombre:"CAJA HAMB + PAPAS", pack:23400, unidad:269.10, packCant:100},
+function renderProductos() {
+  let cont = document.getElementById("productos");
+  cont.innerHTML = "";
 
-  {nombre:"CAJA LOMO GRANDE", pack:11800, unidad:135.70, packCant:100},
-  {nombre:"CAJA LOMO CHICA", pack:8350, unidad:96.03, packCant:100},
+  productos.forEach((p, i) => {
+    cont.innerHTML += `
+      <div class="producto">
+        <div class="info">
+          <div class="nombre">${p.nombre}</div>
+          ${p.pack > 0 ? `<div class="precio">📦 Pack x${p.packCant}: $${p.pack}</div>` : ""}
+          ${p.unidad > 0 ? `<div class="precio">🧩 Unidad: $${p.unidad}</div>` : ""}
+        </div>
 
-  {nombre:"GUANTES NITRILO", pack:0, unidad:8000, packCant:1},
-  {nombre:"FILM PVC", pack:0, unidad:1300, packCant:1},
-  {nombre:"ROLLO ALUMINIO", pack:0, unidad:12000, packCant:1},
+        <div class="cantidad">
+          <button onclick="cambiar(${i}, -1)">-</button>
+          <input type="number" id="p${i}" value="0" min="0">
+          <button onclick="cambiar(${i}, 1)">+</button>
+        </div>
+      </div>
+    `;
+  });
+}
 
-  {nombre:"SERVILLETAS X1000", pack:0, unidad:8000, packCant:1},
+function cambiar(i, valor) {
+  let input = document.getElementById("p" + i);
+  let actual = parseInt(input.value) || 0;
+  let nuevo = actual + valor;
+  if (nuevo < 0) nuevo = 0;
+  input.value = nuevo;
+}
 
-  {nombre:"POTE HELADO 250", pack:0, unidad:5600, packCant:1},
-  {nombre:"POTE HELADO 500", pack:0, unidad:9200, packCant:1},
-  {nombre:"POTE HELADO 1000", pack:0, unidad:13500, packCant:1}
-];
-
-// GENERAR PRODUCTOS EN PANTALLA
-let contenedor = document.getElementById("productos");
-
-productos.forEach((p, i) => {
-  contenedor.innerHTML += `
-    <div class="producto">
-      <span>${p.nombre}</span>
-      <input type="number" id="p${i}" min="0" value="0">
-    </div>
-  `;
-});
-
-// CALCULO
 function calcularPedido() {
   let total = 0;
   let detalle = "";
@@ -132,7 +154,6 @@ function calcularPedido() {
   document.getElementById("total").innerText = "Total: $" + total.toFixed(2);
 }
 
-// WHATSAPP
 function enviarPedido() {
   let mensaje = "Pedido:%0A";
 
@@ -146,7 +167,7 @@ function enviarPedido() {
 
   mensaje += "%0A" + document.getElementById("total").innerText;
 
-  let telefono = "+5493865769832";
+  let telefono = "5493865769832";
   let url = "https://wa.me/" + telefono + "?text=" + mensaje;
 
   window.open(url, "_blank");
