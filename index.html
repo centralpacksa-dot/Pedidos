@@ -1,74 +1,194 @@
-/* BOTON CARRITO */
-.carrito-btn {
-  position: fixed;
-  bottom: 70px;
-  right: 10px;
-  background: #8b0000;
-  color: white;
-  padding: 12px 16px;
-  border-radius: 25px;
-  border: none;
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Central Pack</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #f5e6d3;
 }
 
-/* PANEL */
+/* HEADER */
+.header {
+  background: #8b0000;
+  color: white;
+  padding: 14px;
+  font-size: 18px;
+  font-weight: bold;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* BUSCADOR */
+.buscador {
+  padding: 10px;
+}
+
+.buscador input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  outline: none;
+}
+
+/* PRODUCTOS */
+#productos {
+  padding-bottom: 160px;
+}
+
+.producto {
+  background: #fff;
+  margin: 10px;
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.nombre {
+  font-weight: bold;
+}
+
+.precio {
+  color: #8b0000;
+  font-size: 13px;
+}
+
+.control {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+  gap: 6px;
+}
+
+.btn-cant {
+  width: 42px;
+  height: 42px;
+  border: none;
+  background: #8b0000;
+  color: white;
+  border-radius: 10px;
+  font-size: 18px;
+}
+
+.input-cant {
+  width: 55px;
+  height: 42px;
+  text-align: center;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+}
+
+/* FLOAT CART */
+.carrito-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 15px;
+  background: #8b0000;
+  color: white;
+  padding: 14px 18px;
+  border-radius: 50px;
+  border: none;
+  font-size: 14px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  z-index: 20;
+}
+
+/* BACKDROP */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: none;
+  z-index: 30;
+}
+
+/* PANEL (MOBILE SHEET) */
 .carrito-panel {
   position: fixed;
   bottom: 0;
+  left: 0;
   width: 100%;
-  max-height: 75%;
+  max-height: 80%;
   background: white;
   border-radius: 20px 20px 0 0;
   padding: 15px;
   overflow-y: auto;
-  display: none;
+  transform: translateY(100%);
+  transition: 0.3s ease;
+  z-index: 40;
 }
 
-.panel-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
+.carrito-panel.active {
+  transform: translateY(0);
 }
 
-.panel-toggle {
-  background: transparent;
-  border: 1px solid #8b0000;
-  color: #8b0000;
-  border-radius: 8px;
-  padding: 6px 10px;
-}
-
-.carrito-item {
+.carrito-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
 }
 
+.carrito-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 8px;
+}
+
 .item-info {
-  width: 60%;
   font-size: 13px;
+  width: 60%;
 }
 
 .item-control {
   display: flex;
   align-items: center;
+  gap: 4px;
 }
 
 .item-control button {
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   background: #8b0000;
   color: white;
   border: none;
   border-radius: 6px;
 }
-@@ -155,179 +170,187 @@ body {
+
+.item-control input {
+  width: 40px;
+  text-align: center;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.eliminar {
+  color: red;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.envio {
+  font-size: 13px;
+  margin-top: 10px;
+}
+
+.btn {
+  width: 100%;
   background: #b30000;
   color: white;
   padding: 14px;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   margin-top: 10px;
 }
 </style>
@@ -85,15 +205,17 @@
 <div id="productos"></div>
 
 <button class="carrito-btn" onclick="toggleCarrito()">
-🛒 (<span id="count">0</span>)
+🛒 <span id="count">0</span>
 </button>
 
+<div class="backdrop" id="backdrop" onclick="toggleCarrito()"></div>
+
 <div class="carrito-panel" id="panel">
-  <h3>Tu pedido</h3>
-  <div class="panel-head">
+  <div class="carrito-head">
     <h3>Tu pedido</h3>
-    <button class="panel-toggle" onclick="toggleCarrito()">Ocultar</button>
+    <button onclick="toggleCarrito()">✖</button>
   </div>
+
   <div id="detalle"></div>
   <div id="total"></div>
   <div class="envio" id="envio"></div>
@@ -103,7 +225,6 @@
 </div>
 
 <script>
-
 let productos = [];
 let productosFiltrados = [];
 let cantidades = JSON.parse(localStorage.getItem("pedido")) || {};
@@ -126,13 +247,12 @@ function render(){
     cont.innerHTML+=`
     <div class="producto">
       <div class="nombre">${p.nombre}</div>
-      ${p.pack?`<div class="precio">Pack x${p.packCant}: $${p.pack}</div>`:""}
+      ${p.pack?`<div class="precio">Pack: $${p.pack}</div>`:""}
       ${p.unidad?`<div class="precio">Unidad: $${p.unidad}</div>`:""}
 
       <div class="control">
         <button class="btn-cant" onclick="cambiar('${p.nombre}',-1)">-</button>
         <input class="input-cant" value="${c}" oninput="setCantidad('${p.nombre}',this.value)">
-        <input class="input-cant" value="${c}" oninput="setCantidad('${p.nombre}',this.value,false)">
         <button class="btn-cant" onclick="cambiar('${p.nombre}',1)">+</button>
       </div>
     </div>`;
@@ -148,17 +268,10 @@ function cambiar(n,v){
 }
 
 function setCantidad(n,val){
-function setCantidad(n,val,renderizar=true){
   let num=parseInt(val)||0;
   if(num<0)num=0;
   cantidades[n]=num;
   actualizar();
-  if(renderizar){
-    actualizar();
-  } else {
-    calcular();
-    localStorage.setItem("pedido", JSON.stringify(cantidades));
-  }
 }
 
 function eliminar(n){
@@ -179,28 +292,21 @@ function calcular(){
 
   productos.forEach(p=>{
     let c=cantidades[p.nombre]||0;
-
     if(c>0){
-      count++;
+      count+=c;
 
-      let packs=Math.floor(c/p.packCant);
-      let resto=c%p.packCant;
-      let sub=(packs*p.pack)+(resto*p.unidad);
-
+      let sub=c*(p.unidad||0);
       total+=sub;
 
       detalle+=`
       <div class="carrito-item">
         <div class="item-info">
-          ${p.nombre}<br>
-          x${c} → $${sub}
+          ${p.nombre}<br>x${c} - $${sub}
           <div class="eliminar" onclick="eliminar('${p.nombre}')">Eliminar</div>
         </div>
-
         <div class="item-control">
           <button onclick="cambiar('${p.nombre}',-1)">-</button>
           <input value="${c}" oninput="setCantidad('${p.nombre}',this.value)">
-          <input value="${c}" oninput="setCantidad('${p.nombre}',this.value,false)">
           <button onclick="cambiar('${p.nombre}',1)">+</button>
         </div>
       </div>`;
@@ -211,19 +317,25 @@ function calcular(){
   document.getElementById("total").innerText="Total: $"+total;
   document.getElementById("count").innerText=count;
 
-  // mensaje envio
-  if(total<12000){
-    document.getElementById("envio").innerText =
-    "🚚 Te faltan $" + (12000-total) + " para envío gratis";
-  } else {
-    document.getElementById("envio").innerText =
-    "✅ Tenés envío gratis";
-  }
+  document.getElementById("envio").innerText =
+    total<12000
+    ? "🚚 Te faltan $"+(12000-total)+" para envío gratis"
+    : "✅ Envío gratis";
 }
 
 function toggleCarrito(){
-  let p=document.getElementById("panel");
-  p.style.display=p.style.display==="block"?"none":"block";
+  let panel=document.getElementById("panel");
+  let bg=document.getElementById("backdrop");
+
+  let open=panel.classList.contains("active");
+
+  if(open){
+    panel.classList.remove("active");
+    bg.style.display="none";
+  }else{
+    panel.classList.add("active");
+    bg.style.display="block";
+  }
 }
 
 function guardarPedido(){
@@ -241,18 +353,16 @@ function enviarPedido(){
   });
 
   msg+="%0ATotal: "+document.getElementById("total").innerText;
-  msg+="%0A"+document.getElementById("total").innerText;
 
   window.open("https://wa.me/543865769832?text="+msg);
 }
 
-function filtrar(txt){
+function filtrar(t){
   productosFiltrados=productos.filter(p=>
-    p.nombre.toLowerCase().includes(txt.toLowerCase())
+    p.nombre.toLowerCase().includes(t.toLowerCase())
   );
   render();
 }
-
 </script>
 
 </body>
