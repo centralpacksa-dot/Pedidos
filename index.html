@@ -400,6 +400,15 @@ function filtrar(t){
   );
   render();
 }
+function vaciarCarrito(){
+  const confirmar = confirm("¿Seguro que quieres vaciar el carrito?");
+  if(!confirmar) return;
+
+  cantidades = {};
+  localStorage.removeItem("pedido");
+  actualizar();
+}
+
 </script>
 
 </body>
