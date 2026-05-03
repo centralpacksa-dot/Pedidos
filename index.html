@@ -1,0 +1,140 @@
+>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Pedidos Distribuidora</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: #f2f2f2;
+  padding: 15px;
+}
+
+h1 {
+  text-align: center;
+}
+
+.producto {
+  background: #fff;
+  padding: 15px;
+  margin: 10px 0;
+  border-radius: 10px;
+}
+
+input {
+  width: 60px;
+  padding: 5px;
+  margin-left: 10px;
+}
+
+button {
+  padding: 10px;
+  margin-top: 10px;
+  border: none;
+  background: black;
+  color: white;
+  border-radius: 5px;
+}
+
+#carrito {
+  background: #fff;
+  padding: 15px;
+  margin-top: 20px;
+  border-radius: 10px;
+}
+
+.total {
+  font-weight: bold;
+  margin-top: 10px;
+}
+</style>
+
+</head>
+<body>
+
+<h1>Hacer Pedido</h1>
+
+<div class="producto">
+  Caja de Pizza ($500)
+  <input type="number" id="p1" min="0" value="0">
+</div>
+
+<div class="producto">
+  Bandeja 103 ($300)
+  <input type="number" id="p2" min="0" value="0">
+</div>
+
+<div class="producto">
+  Guantes ($200)
+  <input type="number" id="p3" min="0" value="0">
+</div>
+
+<button onclick="generarCarrito()">Actualizar Pedido</button>
+
+<div id="carrito">
+  <h2>Resumen</h2>
+  <div id="detalle"></div>
+  <div class="total" id="total"></div>
+  <button onclick="enviarPedido()">Enviar Pedido</button>
+</div>
+
+<script>
+let productos = [
+  {nombre: "Caja de Pizza", precio: 500, input: "p1"},
+  {nombre: "Bandeja 103", precio: 300, input: "p2"},
+  {nombre: "Guantes", precio: 200, input: "p3"}
+];
+
+let pedido = [];
+
+function generarCarrito() {
+  pedido = [];
+  let detalle = "";
+  let total = 0;
+
+  productos.forEach(p => {
+    let cantidad = document.getElementById(p.input).value;
+
+    if (cantidad > 0) {
+      let subtotal = cantidad * p.precio;
+      total += subtotal;
+
+      pedido.push({
+        nombre: p.nombre,
+        cantidad: cantidad,
+        subtotal: subtotal
+      });
+
+      detalle += `${p.nombre} x${cantidad} = $${subtotal}<br>`;
+    }
+  });
+
+  document.getElementById("detalle").innerHTML = detalle;
+  document.getElementById("total").innerText = "Total: $" + total;
+}
+
+function enviarPedido() {
+  if (pedido.length === 0) {
+    alert("Agregá productos primero");
+    return;
+  }
+
+  let mensaje = "Hola, quiero hacer este pedido:%0A%0A";
+
+  pedido.forEach(p => {
+    mensaje += `- ${p.nombre} x${p.cantidad} ($${p.subtotal})%0A`;
+  });
+
+  let totalTexto = document.getElementById("total").innerText;
+  mensaje += "%0A" + totalTexto;
+
+  let telefono = "+5493865769832";
+  let url = "https://wa.me/" + telefono + "?text=" + mensaje;
+
+  window.open(url, "_blank");
+}
+</script>
+
+</body>
+</html>
