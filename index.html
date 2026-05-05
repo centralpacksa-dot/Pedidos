@@ -6,83 +6,147 @@
 <title>Central Pack</title>
 
 <style>
-body { margin:0; font-family:Arial; background:#f5e6d3;}
-*{box-sizing:border-box;}
-
-/* HEADER */
-.header {
-  background:#8b0000;
-  color:white;
-  padding:14px;
-  font-weight:bold;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
+body{
+margin:0;
+font-family:Arial;
+background:#f5e6d3;
+overflow-x:hidden;
 }
 
-/* CARRITO HEADER */
-.carrito-header{
-  font-size:18px;
-  cursor:pointer;
-  background:#fff2;
-  padding:6px 10px;
-  border-radius:10px;
+*{box-sizing:border-box}
+
+/* 🔥 HEADER PREMIUM */
+.header{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+background:#8b0000;
+color:white;
+z-index:100;
+box-shadow:0 4px 12px rgba(0,0,0,.25);
 }
 
-/* BANNER */
+.header-top{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:12px 15px;
+}
+
+.logo{
+font-size:22px;
+font-weight:bold;
+letter-spacing:1px;
+}
+
+/* 🛒 carrito arriba */
+.carrito-top{
+font-size:18px;
+background:white;
+color:#8b0000;
+padding:6px 12px;
+border-radius:20px;
+font-weight:bold;
+cursor:pointer;
+}
+
+/* 🔥 BANNER ROTATIVO */
 .banner{
-  background:#b30000;
-  color:white;
-  text-align:center;
-  padding:8px;
-  font-size:13px;
-  font-weight:bold;
+background:#b30000;
+text-align:center;
+padding:6px;
+font-size:13px;
+font-weight:bold;
+letter-spacing:.5px;
+}
+
+#bannerText{
+transition:0.3s;
 }
 
 /* BUSCADOR */
-.buscador{padding:10px;}
-.buscador input{width:100%;padding:12px;border-radius:12px;border:1px solid #ddd;}
+.buscador{
+margin-top:100px;
+padding:10px;
+}
 
-.filtros{padding:10px; display:flex; gap:6px;}
+.buscador input{
+width:100%;
+padding:12px;
+border-radius:12px;
+border:1px solid #ddd;
+}
 
-#productos{padding-bottom:160px;}
+/* PRODUCTOS */
+#productos{
+padding-bottom:160px;
+}
 
 .producto{
-background:#fff;margin:10px;border-radius:16px;padding:14px;
-box-shadow:0 2px 8px rgba(0,0,0,.05);
+background:white;
+margin:10px;
+border-radius:16px;
+padding:14px;
+box-shadow:0 3px 10px rgba(0,0,0,.08);
 }
 
 .nombre{font-weight:bold;}
 .precio{color:#8b0000;font-size:13px;}
 
-.control{display:flex;justify-content:flex-end;gap:6px;margin-top:10px;}
+.control{
+display:flex;
+justify-content:flex-end;
+margin-top:10px;
+gap:6px;
+}
 
 .btn-cant{
-width:42px;height:42px;border:none;background:#8b0000;color:white;
+width:42px;height:42px;
+border:none;
+background:#8b0000;
+color:white;
 border-radius:10px;
+font-size:18px;
 }
 
 .input-cant{
-width:55px;height:42px;text-align:center;border-radius:10px;border:1px solid #ddd;
+width:55px;height:42px;
+text-align:center;
+border-radius:10px;
+border:1px solid #ddd;
 }
 
 /* PANEL */
 .backdrop{
-position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.4);
+display:none;
+z-index:50;
 }
 
 .carrito-panel{
-position:fixed;bottom:0;left:0;right:0;background:white;
-max-height:85vh;border-radius:20px 20px 0 0;
-padding:15px;overflow:auto;transform:translateY(100%);
+position:fixed;
+bottom:0;
+left:0;
+right:0;
+max-height:85vh;
+background:white;
+border-radius:20px 20px 0 0;
+padding:15px;
+overflow-y:auto;
+transform:translateY(100%);
 transition:.3s;
+z-index:60;
 }
 
-.carrito-panel.active{transform:translateY(0);}
+.carrito-panel.active{
+transform:translateY(0);
+}
 
 .carrito-item{
 display:flex;
-align-items:center;
 justify-content:space-between;
 margin-bottom:12px;
 position:relative;
@@ -100,13 +164,19 @@ margin-right:25px;
 }
 
 .item-control button{
-width:36px;height:36px;font-size:18px;
-background:#8b0000;color:white;border:none;border-radius:6px;
+width:36px;height:36px;
+font-size:18px;
+background:#8b0000;
+color:white;
+border:none;
+border-radius:6px;
 }
 
 .item-control input{
-width:45px;height:36px;text-align:center;
-border:1px solid #ddd;border-radius:6px;
+width:45px;height:36px;
+text-align:center;
+border:1px solid #ddd;
+border-radius:6px;
 }
 
 .close-x{
@@ -131,32 +201,22 @@ margin-top:10px;
 
 <body>
 
+<!-- HEADER -->
 <div class="header">
-  Central Pack
-  <div class="carrito-header" onclick="toggleCarrito()">🛒 <span id="count">0</span></div>
-</div>
+  <div class="header-top">
+    <div class="logo">CENTRAL PACK</div>
+    <div class="carrito-top" onclick="toggleCarrito()">
+      🛒 <span id="count">0</span>
+    </div>
+  </div>
 
-<div class="banner" id="banner"></div>
+  <div class="banner">
+    <span id="bannerText">COMPRÁ POR MAYOR Y MENOR</span>
+  </div>
+</div>
 
 <div class="buscador">
 <input type="text" placeholder="Buscar..." onkeyup="filtrarTodo()">
-</div>
-
-<div class="filtros">
-<select id="filtroCat" onchange="filtrarTodo()">
-<option value="">Categoría</option>
-<option value="Bolsas">Bolsas</option>
-<option value="Bandejas">Bandejas</option>
-<option value="Cajas">Cajas</option>
-<option value="Varios">Varios</option>
-<option value="Insumos">Insumos</option>
-</select>
-
-<select id="filtroPrecio" onchange="filtrarTodo()">
-<option value="">Precio</option>
-<option value="menor">Menor a mayor</option>
-<option value="mayor">Mayor a menor</option>
-</select>
 </div>
 
 <div id="productos"></div>
@@ -173,24 +233,10 @@ margin-top:10px;
 </div>
 
 <script>
-
 let productos=[];
 let productosFiltrados=[];
 let cantidades=JSON.parse(localStorage.getItem("pedido"))||{};
 
-/* 🔥 BANNER ROTATIVO */
-const mensajes=[
-"Comprá por mayor y por menor",
-"Envío gratis con compra mínima",
-"15% OFF comprando por pack"
-];
-let i=0;
-setInterval(()=>{
-document.getElementById("banner").innerText=mensajes[i];
-i=(i+1)%mensajes.length;
-},2500);
-
-/* FETCH */
 fetch("productos.json")
 .then(r=>r.json())
 .then(data=>{
@@ -199,25 +245,31 @@ productosFiltrados=data;
 actualizar();
 });
 
-/* 🔥 REDONDEO */
-function precio(n){
-return Number(n).toFixed(2);
-}
+/* 🔥 BANNER ROTATIVO */
+const mensajes=[
+"COMPRÁ POR MAYOR Y MENOR",
+"ENVÍO GRATIS CON COMPRA MÍNIMA",
+"15% OFF COMPRANDO POR PACK"
+];
 
-/* 🔥 CALCULO */
+let i=0;
+setInterval(()=>{
+i=(i+1)%mensajes.length;
+document.getElementById("bannerText").innerText=mensajes[i];
+},2500);
+
+/* CALCULO */
 function calcularItem(p,c){
-let packCant=p.packCant;
+let packCant=p.packCant||1;
 let pack=p.pack||0;
 let unidad=p.unidad||0;
-
-if(!pack || packCant<=1){
-return c*unidad;
-}
 
 let packs=Math.floor(c/packCant);
 let resto=c%packCant;
 
-return (packs*pack)+(resto*unidad);
+let total=(packs*pack)+(resto*unidad);
+
+return Math.round(total*100)/100;
 }
 
 function render(){
@@ -231,12 +283,13 @@ cont.innerHTML+=`
 <div class="producto">
 <div class="nombre">${p.nombre}</div>
 
-${p.pack?`<div class="precio">Pack (${p.packCant}): $${precio(p.pack)}</div>`:""}
-${p.unidad?`<div class="precio">Unidad: $${precio(p.unidad)}</div>`:""}
+${p.pack?`<div class="precio">Pack (${p.packCant}): $${p.pack}</div>`:""}
+${p.unidad?`<div class="precio">Unidad: $${p.unidad}</div>`:""}
 
 <div class="control">
 <button class="btn-cant" onclick="cambiar('${p.nombre}',-1)">-</button>
-<input class="input-cant" value="${c}" oninput="setCantidad('${p.nombre}',this.value)">
+<input class="input-cant" value="${c}" 
+oninput="setCantidad('${p.nombre}',this.value)">
 <button class="btn-cant" onclick="cambiar('${p.nombre}',1)">+</button>
 </div>
 </div>`;
@@ -250,7 +303,6 @@ cantidades[n]=c;
 actualizar();
 }
 
-/* 🔥 FIX TECLADO */
 function setCantidad(n,val){
 let num=parseInt(val)||0;
 if(num<0)num=0;
@@ -273,18 +325,19 @@ let count=0;
 
 productos.forEach(p=>{
 let c=cantidades[p.nombre]||0;
+
 if(c>0){
 count++;
 total+=calcularItem(p,c);
 }
 });
 
-document.getElementById("total").innerText="Total: $"+precio(total);
+document.getElementById("total").innerText="Total: $"+total.toFixed(2);
 document.getElementById("count").innerText=count;
 
 document.getElementById("envio").innerText =
 total < 12000
-? "🚚 Te faltan $" + precio(12000-total)
+? "🚚 Te faltan $" + (12000 - total).toFixed(2)
 : "✅ Tenés envío gratis";
 }
 
@@ -308,7 +361,7 @@ detalle+=`
 <div class="item-info">
 ${p.nombre}<br>
 x${c}<br>
-<b>Subtotal: $${precio(sub)}</b>
+<b>Subtotal: $${sub.toFixed(2)}</b>
 </div>
 
 <div class="item-control">
@@ -324,12 +377,12 @@ x${c}<br>
 });
 
 document.getElementById("detalle").innerHTML=detalle;
-document.getElementById("total").innerText="Total: $"+precio(total);
+document.getElementById("total").innerText="Total: $"+total.toFixed(2);
 document.getElementById("count").innerText=count;
 
 document.getElementById("envio").innerText =
 total < 12000
-? "🚚 Te faltan $" + precio(12000-total)
+? "🚚 Te faltan $" + (12000 - total).toFixed(2)
 : "✅ Tenés envío gratis";
 }
 
@@ -364,26 +417,13 @@ window.open("https://wa.me/543865769832?text="+msg);
 
 function filtrarTodo(){
 let texto=document.querySelector(".buscador input").value.toLowerCase();
-let cat=document.getElementById("filtroCat").value;
-let precioFiltro=document.getElementById("filtroPrecio").value;
 
-let lista=productos.filter(p=>{
-let okTexto=p.nombre.toLowerCase().includes(texto);
-let okCat=!cat || p.categoria===cat;
-return okTexto && okCat;
-});
+productosFiltrados=productos.filter(p=>
+p.nombre.toLowerCase().includes(texto)
+);
 
-if(precioFiltro==="menor"){
-lista.sort((a,b)=>(a.unidad||a.pack)-(b.unidad||b.pack));
-}
-if(precioFiltro==="mayor"){
-lista.sort((a,b)=>(b.unidad||b.pack)-(a.unidad||a.pack));
-}
-
-productosFiltrados=lista;
 render();
 }
-
 </script>
 
 </body>
