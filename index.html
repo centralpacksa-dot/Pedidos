@@ -159,9 +159,14 @@ actualizar();
 
 /* 🔥 CALCULO CENTRAL (ARREGLADO) */
 function calcularItem(p,c){
-let packCant = p.packCant || 1;
+let packCant = p.packCant;
 let pack = p.pack || 0;
 let unidad = p.unidad || 0;
+
+// si NO hay pack real → todo por unidad
+if(!pack || packCant <= 1){
+  return c * unidad;
+}
 
 let packs = Math.floor(c / packCant);
 let resto = c % packCant;
