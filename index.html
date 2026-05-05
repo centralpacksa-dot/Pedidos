@@ -34,12 +34,34 @@ align-items:center;
 padding:12px 15px;
 }
 
+/* 🔥 LOGO ESTILO BORDE */
 .logo{
-font-size:26px;
+font-size:28px;
 font-weight:900;
 letter-spacing:2px;
-color:#000;
-text-shadow:1px 1px 2px #fff;
+color:#5a0000;
+text-shadow:
+1px 1px 0 #fff,
+-1px -1px 0 #fff,
+1px -1px 0 #fff,
+-1px 1px 0 #fff,
+2px 2px 3px rgba(0,0,0,.4);
+}
+
+/* 🔍 + 🛒 */
+.header-actions{
+display:flex;
+align-items:center;
+gap:8px;
+}
+
+.lupa{
+font-size:18px;
+background:white;
+color:#8b0000;
+padding:6px 10px;
+border-radius:20px;
+cursor:pointer;
 }
 
 .carrito-top{
@@ -52,25 +74,18 @@ font-weight:bold;
 cursor:pointer;
 }
 
-/* 🔥 BANNER DINÁMICO */
 .banner{
 background:#b30000;
 text-align:center;
-padding:8px;
+padding:6px;
 font-size:14px;
 font-weight:bold;
 letter-spacing:1px;
-overflow:hidden;
-}
-
-#bannerText{
-display:inline-block;
-transition:all .4s ease;
 }
 
 /* BUSCADOR */
 .buscador{
-margin-top:120px;
+margin-top:110px;
 padding:10px;
 }
 
@@ -81,18 +96,17 @@ border-radius:12px;
 border:1px solid #ddd;
 }
 
-/* 🔽 FILTROS NUEVOS */
+/* FILTROS */
 .filtros{
 display:flex;
-gap:8px;
+gap:6px;
 padding:10px;
 }
 
 .filtros select{
-flex:1;
-padding:10px;
+padding:8px;
 border-radius:10px;
-border:1px solid #ddd;
+border:none;
 }
 
 /* PRODUCTOS */
@@ -221,21 +235,23 @@ margin-top:10px;
 <div class="header">
   <div class="header-top">
     <div class="logo">CENTRAL PACK</div>
-    <div class="carrito-top" onclick="toggleCarrito()">🛒 <span id="count">0</span></div>
+
+    <div class="header-actions">
+      <div class="lupa" onclick="focusBuscar()">🔍</div>
+      <div class="carrito-top" onclick="toggleCarrito()">🛒 <span id="count">0</span></div>
+    </div>
   </div>
 
-  <div class="banner">
-    <span id="bannerText">COMPRÁ POR MAYOR Y MENOR</span>
-  </div>
+  <div class="banner" id="bannerText">COMPRÁ POR MAYOR Y MENOR</div>
 </div>
 
 <div class="buscador">
-<input type="text" placeholder="Buscar..." onkeyup="filtrarTodo()">
+<input id="inputBuscar" type="text" placeholder="Buscar..." onkeyup="filtrarTodo()">
 </div>
 
 <div class="filtros">
-<select id="filtroCat" onchange="filtrarTodo()">
-<option value="">Todas las categorías</option>
+<select onchange="setCategoria(this.value)">
+<option value="">Todas</option>
 <option value="Varios">Varios</option>
 <option value="Insumos">Insumos</option>
 <option value="Envases">Envases</option>
@@ -244,8 +260,8 @@ margin-top:10px;
 <option value="Bandejas">Bandejas</option>
 </select>
 
-<select id="filtroPrecio" onchange="filtrarTodo()">
-<option value="">Ordenar por precio</option>
+<select onchange="ordenarSelect(this.value)">
+<option value="">Ordenar</option>
 <option value="mayor">Mayor a menor</option>
 <option value="menor">Menor a mayor</option>
 </select>
@@ -267,10 +283,26 @@ margin-top:10px;
 let productos=[];
 let productosFiltrados=[];
 let cantidades=JSON.parse(localStorage.getItem("pedido"))||{};
+let categoriaActiva="";
+let ordenTipo="";
 
-/* 🔥 BANNER ROTATIVO */
+/* FETCH */
+fetch("productos.json")
+.then(r=>r.json())
+.then(data=>{
+productos=data;
+productosFiltrados=data;
+actualizar();
+});
+
+/* 🔍 LUPA */
+function focusBuscar(){
+document.getElementById("inputBuscar").focus();
+}
+
+/* 🔥 BANNER DINÁMICO */
 const mensajes=[
-"COMPRÁ POR MAYOR Y POR MENOR",
+"COMPRÁ POR MAYOR Y MENOR",
 "ENVÍO GRATIS CON COMPRA MÍNIMA",
 "15% OFF COMPRANDO POR PACK"
 ];
@@ -280,14 +312,6 @@ setInterval(()=>{
 i=(i+1)%mensajes.length;
 document.getElementById("bannerText").innerText=mensajes[i];
 },2500);
-
-fetch("productos.json")
-.then(r=>r.json())
-.then(data=>{
-productos=data;
-productosFiltrados=data;
-actualizar();
-});
 
 function money(n){ return Number(n).toFixed(2); }
 
@@ -301,9 +325,11 @@ let packs=Math.floor(c/packCant);
 let resto=c%packCant;
 return (packs*pack)+(resto*unidad);
 }
+
 return c*unidad;
 }
 
+/* RENDER */
 function render(){
 let cont=document.getElementById("productos");
 cont.innerHTML="";
@@ -319,7 +345,8 @@ ${p.unidad?`<div class="precio">Unidad: $${p.unidad}</div>`:""}
 
 <div class="control">
 <button class="btn-cant" onclick="cambiar('${p.nombre}',-1)">-</button>
-<input class="input-cant" value="${c}" oninput="setCantidad('${p.nombre}',this.value)">
+<input class="input-cant" value="${c}" 
+oninput="setCantidad('${p.nombre}',this.value)">
 <button class="btn-cant" onclick="cambiar('${p.nombre}',1)">+</button>
 </div>
 </div>`;
@@ -333,12 +360,16 @@ cantidades[n]=c;
 actualizar();
 }
 
-/* 🔥 FIX teclado REAL */
+/* 🔥 FIX TOTAL + TECLADO (CLAVE) */
 function setCantidad(n,val){
 let num=parseInt(val)||0;
 if(num<0)num=0;
+
 cantidades[n]=num;
-calcularSolo(); /* NO re-render */
+
+/* recalcula TODO sin render */
+calcular();
+
 localStorage.setItem("pedido",JSON.stringify(cantidades));
 }
 
@@ -346,27 +377,6 @@ function actualizar(){
 render();
 calcular();
 localStorage.setItem("pedido",JSON.stringify(cantidades));
-}
-
-function calcularSolo(){
-let total=0;
-let count=0;
-
-productos.forEach(p=>{
-let c=cantidades[p.nombre]||0;
-if(c>0){
-count++;
-total+=calcularItem(p,c);
-}
-});
-
-document.getElementById("total").innerText="Total: $"+money(total);
-document.getElementById("count").innerText=count;
-
-document.getElementById("envio").innerText =
-total < 12000
-? "🚚 Te faltan $" + money(12000-total)
-: "✅ Envío gratis";
 }
 
 function calcular(){
@@ -439,22 +449,30 @@ msg+="%0ATotal: "+total;
 window.open("https://wa.me/543865769832?text="+msg);
 }
 
-/* 🔥 FILTRO NUEVO */
+/* FILTROS */
+function setCategoria(cat){
+categoriaActiva=cat;
+filtrarTodo();
+}
+
+function ordenarSelect(tipo){
+ordenTipo=tipo;
+filtrarTodo();
+}
+
 function filtrarTodo(){
-let texto=document.querySelector(".buscador input").value.toLowerCase();
-let cat=document.getElementById("filtroCat").value;
-let precio=document.getElementById("filtroPrecio").value;
+let texto=document.getElementById("inputBuscar").value.toLowerCase();
 
 let lista=productos.filter(p=>{
 let okTexto=p.nombre.toLowerCase().includes(texto);
-let okCat=!cat || p.categoria===cat;
+let okCat=!categoriaActiva || p.categoria===categoriaActiva;
 return okTexto && okCat;
 });
 
-if(precio==="mayor"){
+if(ordenTipo==="mayor"){
 lista.sort((a,b)=>(b.unidad||b.pack)-(a.unidad||a.pack));
 }
-if(precio==="menor"){
+if(ordenTipo==="menor"){
 lista.sort((a,b)=>(a.unidad||a.pack)-(b.unidad||b.pack));
 }
 
