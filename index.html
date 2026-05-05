@@ -258,7 +258,12 @@ i=(i+1)%mensajes.length;
 document.getElementById("bannerText").innerText=mensajes[i];
 },2500);
 
-/* CALCULO */
+/* 🔥 FORMATO MONEDA */
+function money(n){
+return Number(n).toFixed(2);
+}
+
+/* 🔥 CALCULO CORRECTO */
 function calcularItem(p,c){
 let packCant=p.packCant||1;
 let pack=p.pack||0;
@@ -267,11 +272,10 @@ let unidad=p.unidad||0;
 let packs=Math.floor(c/packCant);
 let resto=c%packCant;
 
-let total=(packs*pack)+(resto*unidad);
-
-return Math.round(total*100)/100;
+return (packs*pack)+(resto*unidad);
 }
 
+/* RENDER */
 function render(){
 let cont=document.getElementById("productos");
 cont.innerHTML="";
@@ -296,6 +300,7 @@ oninput="setCantidad('${p.nombre}',this.value)">
 });
 }
 
+/* ACCIONES */
 function cambiar(n,v){
 let c=cantidades[n]||0;
 c+=v;if(c<0)c=0;
@@ -303,13 +308,16 @@ cantidades[n]=c;
 actualizar();
 }
 
+/* 🔥 FIX TECLADO (NO re-renderiza todo) */
 function setCantidad(n,val){
 let num=parseInt(val)||0;
 if(num<0)num=0;
 
 cantidades[n]=num;
 
+/* solo recalcula, NO render */
 calcularSolo();
+
 localStorage.setItem("pedido",JSON.stringify(cantidades));
 }
 
@@ -319,6 +327,7 @@ calcular();
 localStorage.setItem("pedido",JSON.stringify(cantidades));
 }
 
+/* 🔥 CALCULO LIGERO (NO rompe teclado) */
 function calcularSolo(){
 let total=0;
 let count=0;
@@ -332,15 +341,16 @@ total+=calcularItem(p,c);
 }
 });
 
-document.getElementById("total").innerText="Total: $"+total.toFixed(2);
+document.getElementById("total").innerText="Total: $"+money(total);
 document.getElementById("count").innerText=count;
 
 document.getElementById("envio").innerText =
 total < 12000
-? "🚚 Te faltan $" + (12000 - total).toFixed(2)
+? "🚚 Te faltan $" + money(12000 - total)
 : "✅ Tenés envío gratis";
 }
 
+/* 🔥 CALCULO COMPLETO */
 function calcular(){
 let total=0;
 let count=0;
@@ -361,7 +371,7 @@ detalle+=`
 <div class="item-info">
 ${p.nombre}<br>
 x${c}<br>
-<b>Subtotal: $${sub.toFixed(2)}</b>
+<b>Subtotal: $${money(sub)}</b>
 </div>
 
 <div class="item-control">
@@ -377,15 +387,16 @@ x${c}<br>
 });
 
 document.getElementById("detalle").innerHTML=detalle;
-document.getElementById("total").innerText="Total: $"+total.toFixed(2);
+document.getElementById("total").innerText="Total: $"+money(total);
 document.getElementById("count").innerText=count;
 
 document.getElementById("envio").innerText =
 total < 12000
-? "🚚 Te faltan $" + (12000 - total).toFixed(2)
+? "🚚 Te faltan $" + money(12000 - total)
 : "✅ Tenés envío gratis";
 }
 
+/* OTROS */
 function eliminar(n){
 delete cantidades[n];
 actualizar();
@@ -397,6 +408,9 @@ let bg=document.getElementById("backdrop");
 
 p.classList.toggle("active");
 bg.style.display=p.classList.contains("active")?"block":"none";
+
+/* 🔥 asegura cálculo correcto al abrir */
+if(p.classList.contains("active")) calcular();
 }
 
 function enviarPedido(){
