@@ -56,21 +56,61 @@ transition:.3s;
 .carrito-panel.active{transform:translateY(0);}
 
 .carrito-item{
-display:flex;justify-content:space-between;margin-bottom:12px;
-position:relative;border-bottom:1px solid #eee;padding-bottom:8px;
+display:flex;
+align-items:center;
+justify-content:space-between;
+margin-bottom:12px;
+position:relative;
+border-bottom:1px solid #eee;
+padding-bottom:8px;
+}
+
+.item-info{
+width:55%;
+font-size:13px;
+}
+
+.item-control{
+display:flex;
+align-items:center;
+gap:6px;
+margin-right:25px;
 }
 
 .item-control button{
-background:#8b0000;color:white;border:none;border-radius:6px;
+width:36px;
+height:36px;
+font-size:18px;
+background:#8b0000;
+color:white;
+border:none;
+border-radius:6px;
+}
+
+.item-control input{
+width:45px;
+height:36px;
+text-align:center;
+border:1px solid #ddd;
+border-radius:6px;
 }
 
 .close-x{
-position:absolute;right:5px;top:5px;cursor:pointer;font-size:18px;
+position:absolute;
+right:0;
+top:0;
+font-size:18px;
+cursor:pointer;
 }
 
 .btn{
-width:100%;background:#b30000;color:white;padding:14px;
-border:none;border-radius:12px;margin-top:10px;
+width:100%;
+background:#b30000;
+color:white;
+padding:14px;
+border:none;
+border-radius:12px;
+margin-top:10px;
 }
 </style>
 </head>
@@ -86,11 +126,9 @@ border:none;border-radius:12px;margin-top:10px;
 <div class="filtros">
 <select id="filtroCat" onchange="filtrarTodo()">
 <option value="">Categoría</option>
-<option value="Bolsas">Bolsas</option>
-<option value="Bandejas">Bandejas</option>
-<option value="Cajas">Cajas</option>
-<option value="Insumos">Insumos</option>
-<option value="Varios">Varios</option>
+<option value="bolsas">Bolsas</option>
+<option value="bandejas">Bandejas</option>
+<option value="cajas">Cajas</option>
 </select>
 
 <select id="filtroPrecio" onchange="filtrarTodo()">
@@ -110,6 +148,7 @@ border:none;border-radius:12px;margin-top:10px;
 <h3>Tu pedido</h3>
 <div id="detalle"></div>
 <div id="total"></div>
+<div id="envio"></div>
 
 <button class="btn" onclick="enviarPedido()">Enviar Pedido</button>
 </div>
@@ -160,8 +199,10 @@ actualizar();
 function setCantidad(n,val){
 let num=parseInt(val)||0;
 if(num<0)num=0;
+
 cantidades[n]=num;
-calcular();
+
+calcularSolo();
 localStorage.setItem("pedido",JSON.stringify(cantidades));
 }
 
@@ -169,6 +210,33 @@ function actualizar(){
 render();
 calcular();
 localStorage.setItem("pedido",JSON.stringify(cantidades));
+}
+
+function calcularSolo(){
+let total=0;
+let count=0;
+
+productos.forEach(p=>{
+let c=cantidades[p.nombre]||0;
+
+if(c>0){
+count++;
+
+let packs=Math.floor(c/(p.packCant||1));
+let resto=c%(p.packCant||1);
+let sub=(packs*(p.pack||0))+(resto*(p.unidad||0));
+
+total+=sub;
+}
+});
+
+document.getElementById("total").innerText="Total: $"+total;
+document.getElementById("count").innerText=count;
+
+document.getElementById("envio").innerText =
+total < 12000
+? "🚚 Te faltan $" + (12000 - total)
+: "✅ Tenés envío gratis";
 }
 
 function calcular(){
@@ -184,16 +252,14 @@ count++;
 
 let packs=Math.floor(c/(p.packCant||1));
 let resto=c%(p.packCant||1);
-
 let sub=(packs*(p.pack||0))+(resto*(p.unidad||0));
+
 total+=sub;
 
 detalle+=`
 <div class="carrito-item">
 
-<div class="close-x" onclick="eliminar('${p.nombre}')">✖</div>
-
-<div>
+<div class="item-info">
 ${p.nombre}<br>
 x${c}<br>
 <b>Subtotal: $${sub}</b>
@@ -205,6 +271,8 @@ x${c}<br>
 <button onclick="cambiar('${p.nombre}',1)">+</button>
 </div>
 
+<div class="close-x" onclick="eliminar('${p.nombre}')">✖</div>
+
 </div>`;
 }
 });
@@ -212,6 +280,11 @@ x${c}<br>
 document.getElementById("detalle").innerHTML=detalle;
 document.getElementById("total").innerText="Total: $"+total;
 document.getElementById("count").innerText=count;
+
+document.getElementById("envio").innerText =
+total < 12000
+? "🚚 Te faltan $" + (12000 - total)
+: "✅ Tenés envío gratis";
 }
 
 function eliminar(n){
