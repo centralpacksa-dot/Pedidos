@@ -52,18 +52,25 @@ font-weight:bold;
 cursor:pointer;
 }
 
+/* 🔥 BANNER DINÁMICO */
 .banner{
 background:#b30000;
 text-align:center;
-padding:6px;
+padding:8px;
 font-size:14px;
 font-weight:bold;
 letter-spacing:1px;
+overflow:hidden;
+}
+
+#bannerText{
+display:inline-block;
+transition:all .4s ease;
 }
 
 /* BUSCADOR */
 .buscador{
-margin-top:110px;
+margin-top:120px;
 padding:10px;
 }
 
@@ -74,20 +81,18 @@ border-radius:12px;
 border:1px solid #ddd;
 }
 
-/* 🔥 FILTROS */
+/* 🔽 FILTROS NUEVOS */
 .filtros{
 display:flex;
-overflow-x:auto;
-gap:6px;
+gap:8px;
 padding:10px;
 }
 
-.filtros button{
-border:none;
-padding:8px 12px;
-border-radius:20px;
-background:#fff;
-cursor:pointer;
+.filtros select{
+flex:1;
+padding:10px;
+border-radius:10px;
+border:1px solid #ddd;
 }
 
 /* PRODUCTOS */
@@ -218,7 +223,10 @@ margin-top:10px;
     <div class="logo">CENTRAL PACK</div>
     <div class="carrito-top" onclick="toggleCarrito()">🛒 <span id="count">0</span></div>
   </div>
-  <div class="banner">COMPRÁ POR MAYOR Y MENOR</div>
+
+  <div class="banner">
+    <span id="bannerText">COMPRÁ POR MAYOR Y MENOR</span>
+  </div>
 </div>
 
 <div class="buscador">
@@ -226,14 +234,21 @@ margin-top:10px;
 </div>
 
 <div class="filtros">
-<button onclick="setCategoria('')">Todos</button>
-<button onclick="setCategoria('Varios')">Varios</button>
-<button onclick="setCategoria('Insumos')">Insumos</button>
-<button onclick="setCategoria('Envases')">Envases</button>
-<button onclick="setCategoria('Cajas')">Cajas</button>
-<button onclick="setCategoria('Bolsas')">Bolsas</button>
-<button onclick="setCategoria('Bandejas')">Bandejas</button>
-<button onclick="ordenarPrecio()">Mayor $</button>
+<select id="filtroCat" onchange="filtrarTodo()">
+<option value="">Todas las categorías</option>
+<option value="Varios">Varios</option>
+<option value="Insumos">Insumos</option>
+<option value="Envases">Envases</option>
+<option value="Cajas">Cajas</option>
+<option value="Bolsas">Bolsas</option>
+<option value="Bandejas">Bandejas</option>
+</select>
+
+<select id="filtroPrecio" onchange="filtrarTodo()">
+<option value="">Ordenar por precio</option>
+<option value="mayor">Mayor a menor</option>
+<option value="menor">Menor a mayor</option>
+</select>
 </div>
 
 <div id="productos"></div>
@@ -252,8 +267,19 @@ margin-top:10px;
 let productos=[];
 let productosFiltrados=[];
 let cantidades=JSON.parse(localStorage.getItem("pedido"))||{};
-let categoriaActiva="";
-let ordenMayor=false;
+
+/* 🔥 BANNER ROTATIVO */
+const mensajes=[
+"COMPRÁ POR MAYOR Y POR MENOR",
+"ENVÍO GRATIS CON COMPRA MÍNIMA",
+"15% OFF COMPRANDO POR PACK"
+];
+
+let i=0;
+setInterval(()=>{
+i=(i+1)%mensajes.length;
+document.getElementById("bannerText").innerText=mensajes[i];
+},2500);
 
 fetch("productos.json")
 .then(r=>r.json())
@@ -265,7 +291,6 @@ actualizar();
 
 function money(n){ return Number(n).toFixed(2); }
 
-/* 🔥 FIX TOTAL */
 function calcularItem(p,c){
 let packCant=p.packCant||1;
 let pack=p.pack||0;
@@ -276,8 +301,7 @@ let packs=Math.floor(c/packCant);
 let resto=c%packCant;
 return (packs*pack)+(resto*unidad);
 }
-
-return c*unidad; /* 🔥 FIX UNITARIOS */
+return c*unidad;
 }
 
 function render(){
@@ -309,12 +333,12 @@ cantidades[n]=c;
 actualizar();
 }
 
-/* 🔥 FIX TECLADO + TOTAL */
+/* 🔥 FIX teclado REAL */
 function setCantidad(n,val){
 let num=parseInt(val)||0;
 if(num<0)num=0;
 cantidades[n]=num;
-calcular();
+calcularSolo(); /* NO re-render */
 localStorage.setItem("pedido",JSON.stringify(cantidades));
 }
 
@@ -322,6 +346,27 @@ function actualizar(){
 render();
 calcular();
 localStorage.setItem("pedido",JSON.stringify(cantidades));
+}
+
+function calcularSolo(){
+let total=0;
+let count=0;
+
+productos.forEach(p=>{
+let c=cantidades[p.nombre]||0;
+if(c>0){
+count++;
+total+=calcularItem(p,c);
+}
+});
+
+document.getElementById("total").innerText="Total: $"+money(total);
+document.getElementById("count").innerText=count;
+
+document.getElementById("envio").innerText =
+total < 12000
+? "🚚 Te faltan $" + money(12000-total)
+: "✅ Envío gratis";
 }
 
 function calcular(){
@@ -394,28 +439,23 @@ msg+="%0ATotal: "+total;
 window.open("https://wa.me/543865769832?text="+msg);
 }
 
-/* 🔥 FILTROS */
-function setCategoria(cat){
-categoriaActiva=cat;
-filtrarTodo();
-}
-
-function ordenarPrecio(){
-ordenMayor=!ordenMayor;
-filtrarTodo();
-}
-
+/* 🔥 FILTRO NUEVO */
 function filtrarTodo(){
 let texto=document.querySelector(".buscador input").value.toLowerCase();
+let cat=document.getElementById("filtroCat").value;
+let precio=document.getElementById("filtroPrecio").value;
 
 let lista=productos.filter(p=>{
 let okTexto=p.nombre.toLowerCase().includes(texto);
-let okCat=!categoriaActiva || p.categoria===categoriaActiva;
+let okCat=!cat || p.categoria===cat;
 return okTexto && okCat;
 });
 
-if(ordenMayor){
+if(precio==="mayor"){
 lista.sort((a,b)=>(b.unidad||b.pack)-(a.unidad||a.pack));
+}
+if(precio==="menor"){
+lista.sort((a,b)=>(a.unidad||a.pack)-(b.unidad||b.pack));
 }
 
 productosFiltrados=lista;
