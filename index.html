@@ -12,7 +12,6 @@ font-family:Arial;
 background:#e8d3a5;
 overflow-x:hidden;
 }
-
 *{box-sizing:border-box}
 
 /* HEADER */
@@ -34,7 +33,6 @@ align-items:center;
 padding:12px 15px;
 }
 
-/* 🔥 LOGO ESTILO BORDE */
 .logo{
 font-size:28px;
 font-weight:900;
@@ -48,15 +46,12 @@ text-shadow:
 2px 2px 3px rgba(0,0,0,.4);
 }
 
-/* 🔍 + 🛒 */
 .header-actions{
 display:flex;
-align-items:center;
 gap:8px;
 }
 
 .lupa{
-font-size:18px;
 background:white;
 color:#8b0000;
 padding:6px 10px;
@@ -65,7 +60,6 @@ cursor:pointer;
 }
 
 .carrito-top{
-font-size:18px;
 background:white;
 color:#8b0000;
 padding:6px 12px;
@@ -80,7 +74,6 @@ text-align:center;
 padding:6px;
 font-size:14px;
 font-weight:bold;
-letter-spacing:1px;
 }
 
 /* BUSCADOR */
@@ -286,7 +279,6 @@ let cantidades=JSON.parse(localStorage.getItem("pedido"))||{};
 let categoriaActiva="";
 let ordenTipo="";
 
-/* FETCH */
 fetch("productos.json")
 .then(r=>r.json())
 .then(data=>{
@@ -295,12 +287,11 @@ productosFiltrados=data;
 actualizar();
 });
 
-/* 🔍 LUPA */
 function focusBuscar(){
 document.getElementById("inputBuscar").focus();
 }
 
-/* 🔥 BANNER DINÁMICO */
+/* BANNER */
 const mensajes=[
 "COMPRÁ POR MAYOR Y MENOR",
 "ENVÍO GRATIS CON COMPRA MÍNIMA",
@@ -325,7 +316,6 @@ let packs=Math.floor(c/packCant);
 let resto=c%packCant;
 return (packs*pack)+(resto*unidad);
 }
-
 return c*unidad;
 }
 
@@ -345,8 +335,7 @@ ${p.unidad?`<div class="precio">Unidad: $${p.unidad}</div>`:""}
 
 <div class="control">
 <button class="btn-cant" onclick="cambiar('${p.nombre}',-1)">-</button>
-<input class="input-cant" value="${c}" 
-oninput="setCantidad('${p.nombre}',this.value)">
+<input class="input-cant" value="${c}" oninput="setCantidad('${p.nombre}',this.value)">
 <button class="btn-cant" onclick="cambiar('${p.nombre}',1)">+</button>
 </div>
 </div>`;
@@ -360,17 +349,40 @@ cantidades[n]=c;
 actualizar();
 }
 
-/* 🔥 FIX TOTAL + TECLADO (CLAVE) */
+/* 🔥 FIX TECLADO */
 function setCantidad(n,val){
 let num=parseInt(val)||0;
 if(num<0)num=0;
 
 cantidades[n]=num;
 
-/* recalcula TODO sin render */
-calcular();
+/* SOLO recalcula sin reconstruir */
+calcularSolo();
 
 localStorage.setItem("pedido",JSON.stringify(cantidades));
+}
+
+/* 🔥 SOLO TOTALES */
+function calcularSolo(){
+let total=0;
+let count=0;
+
+productos.forEach(p=>{
+let c=cantidades[p.nombre]||0;
+
+if(c>0){
+count++;
+total+=calcularItem(p,c);
+}
+});
+
+document.getElementById("total").innerText="Total: $"+money(total);
+document.getElementById("count").innerText=count;
+
+document.getElementById("envio").innerText =
+total < 12000
+? "🚚 Te faltan $" + money(12000-total)
+: "✅ Envío gratis";
 }
 
 function actualizar(){
@@ -431,6 +443,11 @@ let bg=document.getElementById("backdrop");
 
 p.classList.toggle("active");
 bg.style.display=p.classList.contains("active")?"block":"none";
+
+/* 🔥 recalcula completo solo al abrir */
+if(p.classList.contains("active")){
+calcular();
+}
 }
 
 function enviarPedido(){
