@@ -5,46 +5,73 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Central Pack</title>
 
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#8b0000">
-
 <style>
-body { margin:0; font-family:Arial; background:#f5e6d3; overflow-x:hidden;}
+body { margin:0; font-family:Arial; background:#f5e6d3;}
 *{box-sizing:border-box;}
 
-.header {background:#8b0000;color:white;padding:14px;font-size:18px;font-weight:bold;position:sticky;top:0;}
+.header {background:#8b0000;color:white;padding:14px;font-weight:bold;}
 
 .buscador{padding:10px;}
 .buscador input{width:100%;padding:12px;border-radius:12px;border:1px solid #ddd;}
 
+.filtros{padding:10px; display:flex; gap:6px;}
+
 #productos{padding-bottom:160px;}
 
-.producto{background:#fff;margin:10px;border-radius:16px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.05);}
+.producto{
+background:#fff;margin:10px;border-radius:16px;padding:14px;
+box-shadow:0 2px 8px rgba(0,0,0,.05);
+}
+
 .nombre{font-weight:bold;}
 .precio{color:#8b0000;font-size:13px;}
 
-.control{display:flex;justify-content:flex-end;margin-top:10px;gap:6px;}
-.btn-cant{width:42px;height:42px;border:none;background:#8b0000;color:white;border-radius:10px;}
-.input-cant{width:55px;height:42px;text-align:center;border-radius:10px;border:1px solid #ddd;}
+.control{display:flex;justify-content:flex-end;gap:6px;margin-top:10px;}
 
-.carrito-btn{position:fixed;bottom:20px;right:15px;background:#8b0000;color:white;padding:14px;border-radius:50px;border:none;}
+.btn-cant{
+width:42px;height:42px;border:none;background:#8b0000;color:white;
+border-radius:10px;
+}
 
-.backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;}
+.input-cant{
+width:55px;height:42px;text-align:center;border-radius:10px;border:1px solid #ddd;
+}
+
+.carrito-btn{
+position:fixed;bottom:20px;right:15px;background:#8b0000;color:white;
+padding:14px;border-radius:50px;border:none;
+}
+
+.backdrop{
+position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;
+}
 
 .carrito-panel{
-position:fixed;bottom:0;left:0;right:0;width:100vw;max-height:85vh;background:white;
-border-radius:20px 20px 0 0;padding:15px;overflow-y:auto;
-transform:translateY(100%);transition:.3s;
+position:fixed;bottom:0;left:0;right:0;background:white;
+max-height:85vh;border-radius:20px 20px 0 0;
+padding:15px;overflow:auto;transform:translateY(100%);
+transition:.3s;
 }
 
 .carrito-panel.active{transform:translateY(0);}
 
-.carrito-item{display:flex;justify-content:space-between;margin-bottom:10px;}
+.carrito-item{
+display:flex;justify-content:space-between;margin-bottom:12px;
+position:relative;border-bottom:1px solid #eee;padding-bottom:8px;
+}
 
-.item-control button{background:#8b0000;color:white;border:none;border-radius:6px;}
-.eliminar-btn{background:red;color:white;border:none;padding:4px;border-radius:6px;}
+.item-control button{
+background:#8b0000;color:white;border:none;border-radius:6px;
+}
 
-.btn{width:100%;background:#b30000;color:white;padding:14px;border:none;border-radius:12px;margin-top:10px;}
+.close-x{
+position:absolute;right:5px;top:5px;cursor:pointer;font-size:18px;
+}
+
+.btn{
+width:100%;background:#b30000;color:white;padding:14px;
+border:none;border-radius:12px;margin-top:10px;
+}
 </style>
 </head>
 
@@ -53,7 +80,22 @@ transform:translateY(100%);transition:.3s;
 <div class="header">Central Pack</div>
 
 <div class="buscador">
-<input type="text" placeholder="Buscar..." onkeyup="filtrar(this.value)">
+<input type="text" placeholder="Buscar..." onkeyup="filtrarTodo()">
+</div>
+
+<div class="filtros">
+<select id="filtroCat" onchange="filtrarTodo()">
+<option value="">Categoría</option>
+<option value="bolsas">Bolsas</option>
+<option value="bandejas">Bandejas</option>
+<option value="cajas">Cajas</option>
+</select>
+
+<select id="filtroPrecio" onchange="filtrarTodo()">
+<option value="">Precio</option>
+<option value="menor">Menor a mayor</option>
+<option value="mayor">Mayor a menor</option>
+</select>
 </div>
 
 <div id="productos"></div>
@@ -66,29 +108,34 @@ transform:translateY(100%);transition:.3s;
 <h3>Tu pedido</h3>
 <div id="detalle"></div>
 <div id="total"></div>
-<div id="envio"></div>
 
 <button class="btn" onclick="enviarPedido()">Enviar Pedido</button>
 </div>
 
 <script>
 let productos=[];
+let productosFiltrados=[];
 let cantidades=JSON.parse(localStorage.getItem("pedido"))||{};
 
 fetch("productos.json")
 .then(r=>r.json())
-.then(data=>{productos=data;actualizar();});
+.then(data=>{
+productos=data;
+productosFiltrados=data;
+actualizar();
+});
 
 function render(){
 let cont=document.getElementById("productos");
 cont.innerHTML="";
 
-productos.forEach(p=>{
+productosFiltrados.forEach(p=>{
 let c=cantidades[p.nombre]||0;
 
 cont.innerHTML+=`
 <div class="producto">
 <div class="nombre">${p.nombre}</div>
+
 ${p.pack?`<div class="precio">Pack (${p.packCant}): $${p.pack}</div>`:""}
 ${p.unidad?`<div class="precio">Unidad: $${p.unidad}</div>`:""}
 
@@ -112,57 +159,63 @@ function setCantidad(n,val){
 let num=parseInt(val)||0;
 if(num<0)num=0;
 cantidades[n]=num;
-calcularSolo();
+calcular();
 localStorage.setItem("pedido",JSON.stringify(cantidades));
 }
 
 function actualizar(){
 render();
-calcularFull();
+calcular();
 localStorage.setItem("pedido",JSON.stringify(cantidades));
 }
 
-function calcularSolo(){
+function calcular(){
 let total=0;
-let count=Object.keys(cantidades).filter(k=>cantidades[k]>0).length;
-
-productos.forEach(p=>{
-let c=cantidades[p.nombre]||0;
-if(c>0){total+=c*(p.unidad||0);}
-});
-
-document.getElementById("total").innerText="Total: $"+total;
-document.getElementById("count").innerText=count;
-document.getElementById("envio").innerText=
-total<12000?`🚚 Te faltan $${12000-total}`:`✅ Envío gratis`;
-}
-
-function calcularFull(){
-calcularSolo();
+let count=0;
 let detalle="";
 
 productos.forEach(p=>{
 let c=cantidades[p.nombre]||0;
+
 if(c>0){
-let sub=c*(p.unidad||0);
+count++;
+
+let packs=Math.floor(c/(p.packCant||1));
+let resto=c%(p.packCant||1);
+
+let sub=(packs*(p.pack||0))+(resto*(p.unidad||0));
+total+=sub;
+
 detalle+=`
 <div class="carrito-item">
-<div>${p.nombre}<br>x${c} - $${sub}
-<button class="eliminar-btn" onclick="eliminar('${p.nombre}')">Eliminar</button>
+
+<div class="close-x" onclick="eliminar('${p.nombre}')">✖</div>
+
+<div>
+${p.nombre}<br>
+x${c}<br>
+<b>Subtotal: $${sub}</b>
 </div>
+
 <div class="item-control">
 <button onclick="cambiar('${p.nombre}',-1)">-</button>
 <input value="${c}" oninput="setCantidad('${p.nombre}',this.value)">
 <button onclick="cambiar('${p.nombre}',1)">+</button>
 </div>
+
 </div>`;
 }
 });
 
 document.getElementById("detalle").innerHTML=detalle;
+document.getElementById("total").innerText="Total: $"+total;
+document.getElementById("count").innerText=count;
 }
 
-function eliminar(n){delete cantidades[n];actualizar();}
+function eliminar(n){
+delete cantidades[n];
+actualizar();
+}
 
 function toggleCarrito(){
 let p=document.getElementById("panel");
@@ -170,7 +223,6 @@ let bg=document.getElementById("backdrop");
 
 p.classList.toggle("active");
 bg.style.display=p.classList.contains("active")?"block":"none";
-calcularFull();
 }
 
 function enviarPedido(){
@@ -178,7 +230,9 @@ let msg="Pedido:%0A";
 
 productos.forEach(p=>{
 let c=cantidades[p.nombre]||0;
-if(c>0){msg+=`- ${p.nombre}: ${c}%0A`;}
+if(c>0){
+msg+=`- [${p.codigo||"S/C"}] ${p.nombre}: ${c}%0A`;
+}
 });
 
 let total=document.getElementById("total").innerText.replace("Total: ","");
@@ -187,14 +241,26 @@ msg+="%0ATotal: "+total;
 window.open("https://wa.me/543865769832?text="+msg);
 }
 
-function filtrar(t){
-productosFiltrados=productos.filter(p=>p.nombre.toLowerCase().includes(t.toLowerCase()));
-render();
+function filtrarTodo(){
+let texto=document.querySelector(".buscador input").value.toLowerCase();
+let cat=document.getElementById("filtroCat").value;
+let precio=document.getElementById("filtroPrecio").value;
+
+let lista=productos.filter(p=>{
+let okTexto=p.nombre.toLowerCase().includes(texto);
+let okCat=!cat || p.categoria===cat;
+return okTexto && okCat;
+});
+
+if(precio==="menor"){
+lista.sort((a,b)=>(a.unidad||a.pack)-(b.unidad||b.pack));
+}
+if(precio==="mayor"){
+lista.sort((a,b)=>(b.unidad||b.pack)-(a.unidad||a.pack));
 }
 
-/* PWA */
-if("serviceWorker" in navigator){
-navigator.serviceWorker.register("service-worker.js");
+productosFiltrados=lista;
+render();
 }
 </script>
 
