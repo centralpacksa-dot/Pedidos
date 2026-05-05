@@ -9,13 +9,13 @@
 body{
 margin:0;
 font-family:Arial;
-background:#f5e6d3;
+background:#e8d3a5;
 overflow-x:hidden;
 }
 
 *{box-sizing:border-box}
 
-/* 🔥 HEADER PREMIUM */
+/* HEADER */
 .header{
 position:fixed;
 top:0;
@@ -35,12 +35,13 @@ padding:12px 15px;
 }
 
 .logo{
-font-size:22px;
-font-weight:bold;
-letter-spacing:1px;
+font-size:26px;
+font-weight:900;
+letter-spacing:2px;
+color:#000;
+text-shadow:1px 1px 2px #fff;
 }
 
-/* 🛒 carrito arriba */
 .carrito-top{
 font-size:18px;
 background:white;
@@ -51,23 +52,18 @@ font-weight:bold;
 cursor:pointer;
 }
 
-/* 🔥 BANNER ROTATIVO */
 .banner{
 background:#b30000;
 text-align:center;
 padding:6px;
-font-size:13px;
+font-size:14px;
 font-weight:bold;
-letter-spacing:.5px;
-}
-
-#bannerText{
-transition:0.3s;
+letter-spacing:1px;
 }
 
 /* BUSCADOR */
 .buscador{
-margin-top:100px;
+margin-top:110px;
 padding:10px;
 }
 
@@ -76,6 +72,22 @@ width:100%;
 padding:12px;
 border-radius:12px;
 border:1px solid #ddd;
+}
+
+/* 🔥 FILTROS */
+.filtros{
+display:flex;
+overflow-x:auto;
+gap:6px;
+padding:10px;
+}
+
+.filtros button{
+border:none;
+padding:8px 12px;
+border-radius:20px;
+background:#fff;
+cursor:pointer;
 }
 
 /* PRODUCTOS */
@@ -201,22 +213,27 @@ margin-top:10px;
 
 <body>
 
-<!-- HEADER -->
 <div class="header">
   <div class="header-top">
     <div class="logo">CENTRAL PACK</div>
-    <div class="carrito-top" onclick="toggleCarrito()">
-      🛒 <span id="count">0</span>
-    </div>
+    <div class="carrito-top" onclick="toggleCarrito()">🛒 <span id="count">0</span></div>
   </div>
-
-  <div class="banner">
-    <span id="bannerText">COMPRÁ POR MAYOR Y MENOR</span>
-  </div>
+  <div class="banner">COMPRÁ POR MAYOR Y MENOR</div>
 </div>
 
 <div class="buscador">
 <input type="text" placeholder="Buscar..." onkeyup="filtrarTodo()">
+</div>
+
+<div class="filtros">
+<button onclick="setCategoria('')">Todos</button>
+<button onclick="setCategoria('Varios')">Varios</button>
+<button onclick="setCategoria('Insumos')">Insumos</button>
+<button onclick="setCategoria('Envases')">Envases</button>
+<button onclick="setCategoria('Cajas')">Cajas</button>
+<button onclick="setCategoria('Bolsas')">Bolsas</button>
+<button onclick="setCategoria('Bandejas')">Bandejas</button>
+<button onclick="ordenarPrecio()">Mayor $</button>
 </div>
 
 <div id="productos"></div>
@@ -228,7 +245,6 @@ margin-top:10px;
 <div id="detalle"></div>
 <div id="total"></div>
 <div id="envio"></div>
-
 <button class="btn" onclick="enviarPedido()">Enviar Pedido</button>
 </div>
 
@@ -236,6 +252,8 @@ margin-top:10px;
 let productos=[];
 let productosFiltrados=[];
 let cantidades=JSON.parse(localStorage.getItem("pedido"))||{};
+let categoriaActiva="";
+let ordenMayor=false;
 
 fetch("productos.json")
 .then(r=>r.json())
@@ -245,37 +263,23 @@ productosFiltrados=data;
 actualizar();
 });
 
-/* 🔥 BANNER ROTATIVO */
-const mensajes=[
-"COMPRÁ POR MAYOR Y MENOR",
-"ENVÍO GRATIS CON COMPRA MÍNIMA",
-"15% OFF COMPRANDO POR PACK"
-];
+function money(n){ return Number(n).toFixed(2); }
 
-let i=0;
-setInterval(()=>{
-i=(i+1)%mensajes.length;
-document.getElementById("bannerText").innerText=mensajes[i];
-},2500);
-
-/* 🔥 FORMATO MONEDA */
-function money(n){
-return Number(n).toFixed(2);
-}
-
-/* 🔥 CALCULO CORRECTO */
+/* 🔥 FIX TOTAL */
 function calcularItem(p,c){
 let packCant=p.packCant||1;
 let pack=p.pack||0;
 let unidad=p.unidad||0;
 
+if(pack>0){
 let packs=Math.floor(c/packCant);
 let resto=c%packCant;
-
 return (packs*pack)+(resto*unidad);
 }
 
-/* RENDER */
+return c*unidad; /* 🔥 FIX UNITARIOS */
+}
+
 function render(){
 let cont=document.getElementById("productos");
 cont.innerHTML="";
@@ -286,21 +290,18 @@ let c=cantidades[p.nombre]||0;
 cont.innerHTML+=`
 <div class="producto">
 <div class="nombre">${p.nombre}</div>
-
 ${p.pack?`<div class="precio">Pack (${p.packCant}): $${p.pack}</div>`:""}
 ${p.unidad?`<div class="precio">Unidad: $${p.unidad}</div>`:""}
 
 <div class="control">
 <button class="btn-cant" onclick="cambiar('${p.nombre}',-1)">-</button>
-<input class="input-cant" value="${c}" 
-oninput="setCantidad('${p.nombre}',this.value)">
+<input class="input-cant" value="${c}" oninput="setCantidad('${p.nombre}',this.value)">
 <button class="btn-cant" onclick="cambiar('${p.nombre}',1)">+</button>
 </div>
 </div>`;
 });
 }
 
-/* ACCIONES */
 function cambiar(n,v){
 let c=cantidades[n]||0;
 c+=v;if(c<0)c=0;
@@ -308,16 +309,12 @@ cantidades[n]=c;
 actualizar();
 }
 
-/* 🔥 FIX TECLADO (NO re-renderiza todo) */
+/* 🔥 FIX TECLADO + TOTAL */
 function setCantidad(n,val){
 let num=parseInt(val)||0;
 if(num<0)num=0;
-
 cantidades[n]=num;
-
-/* solo recalcula, NO render */
-calcularSolo();
-
+calcular();
 localStorage.setItem("pedido",JSON.stringify(cantidades));
 }
 
@@ -327,30 +324,6 @@ calcular();
 localStorage.setItem("pedido",JSON.stringify(cantidades));
 }
 
-/* 🔥 CALCULO LIGERO (NO rompe teclado) */
-function calcularSolo(){
-let total=0;
-let count=0;
-
-productos.forEach(p=>{
-let c=cantidades[p.nombre]||0;
-
-if(c>0){
-count++;
-total+=calcularItem(p,c);
-}
-});
-
-document.getElementById("total").innerText="Total: $"+money(total);
-document.getElementById("count").innerText=count;
-
-document.getElementById("envio").innerText =
-total < 12000
-? "🚚 Te faltan $" + money(12000 - total)
-: "✅ Tenés envío gratis";
-}
-
-/* 🔥 CALCULO COMPLETO */
 function calcular(){
 let total=0;
 let count=0;
@@ -361,16 +334,13 @@ let c=cantidades[p.nombre]||0;
 
 if(c>0){
 count++;
-
 let sub=calcularItem(p,c);
 total+=sub;
 
 detalle+=`
 <div class="carrito-item">
-
 <div class="item-info">
-${p.nombre}<br>
-x${c}<br>
+${p.nombre}<br>x${c}<br>
 <b>Subtotal: $${money(sub)}</b>
 </div>
 
@@ -381,7 +351,6 @@ x${c}<br>
 </div>
 
 <div class="close-x" onclick="eliminar('${p.nombre}')">✖</div>
-
 </div>`;
 }
 });
@@ -392,11 +361,10 @@ document.getElementById("count").innerText=count;
 
 document.getElementById("envio").innerText =
 total < 12000
-? "🚚 Te faltan $" + money(12000 - total)
-: "✅ Tenés envío gratis";
+? "🚚 Te faltan $" + money(12000-total)
+: "✅ Envío gratis";
 }
 
-/* OTROS */
 function eliminar(n){
 delete cantidades[n];
 actualizar();
@@ -408,9 +376,6 @@ let bg=document.getElementById("backdrop");
 
 p.classList.toggle("active");
 bg.style.display=p.classList.contains("active")?"block":"none";
-
-/* 🔥 asegura cálculo correcto al abrir */
-if(p.classList.contains("active")) calcular();
 }
 
 function enviarPedido(){
@@ -429,13 +394,31 @@ msg+="%0ATotal: "+total;
 window.open("https://wa.me/543865769832?text="+msg);
 }
 
+/* 🔥 FILTROS */
+function setCategoria(cat){
+categoriaActiva=cat;
+filtrarTodo();
+}
+
+function ordenarPrecio(){
+ordenMayor=!ordenMayor;
+filtrarTodo();
+}
+
 function filtrarTodo(){
 let texto=document.querySelector(".buscador input").value.toLowerCase();
 
-productosFiltrados=productos.filter(p=>
-p.nombre.toLowerCase().includes(texto)
-);
+let lista=productos.filter(p=>{
+let okTexto=p.nombre.toLowerCase().includes(texto);
+let okCat=!categoriaActiva || p.categoria===categoriaActiva;
+return okTexto && okCat;
+});
 
+if(ordenMayor){
+lista.sort((a,b)=>(b.unidad||b.pack)-(a.unidad||a.pack));
+}
+
+productosFiltrados=lista;
 render();
 }
 </script>
