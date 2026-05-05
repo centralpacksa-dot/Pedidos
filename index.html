@@ -65,10 +65,7 @@ border-bottom:1px solid #eee;
 padding-bottom:8px;
 }
 
-.item-info{
-width:55%;
-font-size:13px;
-}
+.item-info{width:55%;font-size:13px;}
 
 .item-control{
 display:flex;
@@ -78,21 +75,13 @@ margin-right:25px;
 }
 
 .item-control button{
-width:36px;
-height:36px;
-font-size:18px;
-background:#8b0000;
-color:white;
-border:none;
-border-radius:6px;
+width:36px;height:36px;font-size:18px;
+background:#8b0000;color:white;border:none;border-radius:6px;
 }
 
 .item-control input{
-width:45px;
-height:36px;
-text-align:center;
-border:1px solid #ddd;
-border-radius:6px;
+width:45px;height:36px;text-align:center;
+border:1px solid #ddd;border-radius:6px;
 }
 
 .close-x{
@@ -126,9 +115,11 @@ margin-top:10px;
 <div class="filtros">
 <select id="filtroCat" onchange="filtrarTodo()">
 <option value="">Categoría</option>
-<option value="bolsas">Bolsas</option>
-<option value="bandejas">Bandejas</option>
-<option value="cajas">Cajas</option>
+<option value="Bolsas">Bolsas</option>
+<option value="Bandejas">Bandejas</option>
+<option value="Cajas">Cajas</option>
+<option value="Varios">Varios</option>
+<option value="Insumos">Insumos</option>
 </select>
 
 <select id="filtroPrecio" onchange="filtrarTodo()">
@@ -165,6 +156,18 @@ productos=data;
 productosFiltrados=data;
 actualizar();
 });
+
+/* 🔥 CALCULO CENTRAL (ARREGLADO) */
+function calcularItem(p,c){
+let packCant = p.packCant || 1;
+let pack = p.pack || 0;
+let unidad = p.unidad || 0;
+
+let packs = Math.floor(c / packCant);
+let resto = c % packCant;
+
+return (packs * pack) + (resto * unidad);
+}
 
 function render(){
 let cont=document.getElementById("productos");
@@ -221,12 +224,7 @@ let c=cantidades[p.nombre]||0;
 
 if(c>0){
 count++;
-
-let packs=Math.floor(c/(p.packCant||1));
-let resto=c%(p.packCant||1);
-let sub=(packs*(p.pack||0))+(resto*(p.unidad||0));
-
-total+=sub;
+total+=calcularItem(p,c);
 }
 });
 
@@ -250,11 +248,8 @@ let c=cantidades[p.nombre]||0;
 if(c>0){
 count++;
 
-let packs=Math.floor(c/(p.packCant||1));
-let resto=c%(p.packCant||1);
-let sub=(packs*(p.pack||0))+(resto*(p.unidad||0));
-
-total+=sub;
+let sub = calcularItem(p,c);
+total += sub;
 
 detalle+=`
 <div class="carrito-item">
