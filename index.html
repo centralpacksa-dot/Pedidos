@@ -355,13 +355,17 @@ if(num<0)num=0;
 
 cantidades[n]=num;
 
-/* recalcula totales */
+/* recalcula totales generales */
 calcularSolo();
 
-/* 🔥 FIX: actualiza carrito si está abierto */
-let panel=document.getElementById("panel");
-if(panel.classList.contains("active")){
-  calcular();
+/* 🔥 actualizar SOLO el subtotal del producto */
+let p=productos.find(x=>x.nombre===n);
+if(p){
+  let sub=calcularItem(p,num);
+  let el=document.getElementById("sub-"+n);
+  if(el){
+    el.innerText="Subtotal: $"+money(sub);
+  }
 }
 
 localStorage.setItem("pedido",JSON.stringify(cantidades));
@@ -413,7 +417,7 @@ detalle+=`
 <div class="carrito-item">
 <div class="item-info">
 ${p.nombre}<br>x${c}<br>
-<b>Subtotal: $${money(sub)}</b>
+<b id="sub-${p.nombre}">Subtotal: $${money(sub)}</b>
 </div>
 
 <div class="item-control">
