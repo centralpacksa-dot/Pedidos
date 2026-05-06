@@ -349,15 +349,20 @@ cantidades[n]=c;
 actualizar();
 }
 
-/* 🔥 FIX TECLADO */
 function setCantidad(n,val){
 let num=parseInt(val)||0;
 if(num<0)num=0;
 
 cantidades[n]=num;
 
-/* SOLO recalcula sin reconstruir */
+/* recalcula totales */
 calcularSolo();
+
+/* 🔥 FIX: actualiza carrito si está abierto */
+let panel=document.getElementById("panel");
+if(panel.classList.contains("active")){
+  calcular();
+}
 
 localStorage.setItem("pedido",JSON.stringify(cantidades));
 }
