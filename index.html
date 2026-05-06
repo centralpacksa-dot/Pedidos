@@ -306,6 +306,10 @@ document.getElementById("bannerText").innerText=mensajes[i];
 
 function money(n){ return Number(n).toFixed(2); }
 
+function safeId(text){
+return text.replace(/\s+/g,'-').replace(/[^\w\-]/g,'');
+}
+
 function calcularItem(p,c){
 let packCant=p.packCant||1;
 let pack=p.pack||0;
@@ -362,7 +366,7 @@ calcularSolo();
 let p=productos.find(x=>x.nombre===n);
 if(p){
   let sub=calcularItem(p,num);
-  let el=document.getElementById("sub-"+n);
+  let el=document.getElementById("sub-"+safeId(n));
   if(el){
     el.innerText="Subtotal: $"+money(sub);
   }
@@ -417,7 +421,7 @@ detalle+=`
 <div class="carrito-item">
 <div class="item-info">
 ${p.nombre}<br>x${c}<br>
-<b id="sub-${p.nombre}">Subtotal: $${money(sub)}</b>
+<b id="sub-${safeId(p.nombre)}">Subtotal: $${money(sub)}</b>
 </div>
 
 <div class="item-control">
