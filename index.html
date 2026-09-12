@@ -2279,7 +2279,7 @@ document.getElementById("btnCerrarSesionAdmin").addEventListener("click", ()=>{
 /* Reacciona a cualquier login/logout, de clientes o del admin */
 auth.onAuthStateChanged((user)=>{
   usuarioActual = user;
-  esAdmin = !!(user && user.email === ADMIN_EMAIL);
+  esAdmin = !!(user && user.email && user.email.trim().toLowerCase() === ADMIN_EMAIL.trim().toLowerCase());
 
   const terminar = ()=>{
     document.getElementById("sesionDot").classList.toggle("activa", !!user);
