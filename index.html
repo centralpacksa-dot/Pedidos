@@ -406,10 +406,17 @@ p{margin:0}
 .catalogo-nota .icon{color:var(--rojo-oscuro);flex-shrink:0;margin-top:2px}
 
 @media (max-width:640px){
-  .subcat-bloque{flex-direction:column}
-  .subcat-foto{width:100%;height:190px}
+  .subcat-bloque{flex-direction:row; gap:14px; align-items:flex-start; padding:20px 0}
+  .subcat-foto{width:92px; height:92px; flex-shrink:0}
   .subcat-lista{grid-template-columns:1fr}
+  .subcat-ribbon{font-size:13px; padding:7px 16px 7px 12px}
+  .subcat-lista li{font-size:13px}
+  .subcat-pedir{font-size:12px; padding:9px 14px}
   .catalogo-ribbon{font-size:17px;padding:12px 32px}
+}
+
+@media (max-width:400px){
+  .subcat-foto{width:76px; height:76px}
 }
 
 /* ============ NOSOTROS ============ */
@@ -1972,9 +1979,10 @@ function setCantidad(cod, val){
 
 /* ================= FILTROS ================= */
 function filtrarTodo(){
-  const q = textoBusqueda.toLowerCase();
+  const tokens = textoBusqueda.toLowerCase().trim().split(/\s+/).filter(Boolean);
   let lista = productos.filter(p=>{
-    const okTexto = p.nombre.toLowerCase().includes(q) || (p.codigo||"").toLowerCase().includes(q);
+    const searchable = `${p.nombre} ${p.categoria} ${p.subcategoria||""} ${p.codigo||""}`.toLowerCase();
+    const okTexto = tokens.length===0 || tokens.every(t => searchable.includes(t));
     const okCat = !categoriaActiva || p.categoria===categoriaActiva;
     return okTexto && okCat;
   });
