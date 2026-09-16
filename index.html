@@ -420,7 +420,7 @@ p{margin:0}
 }
 
 /* ============ NOSOTROS ============ */
-.nosotros-intro{max-width:760px;font-size:16px;line-height:1.75;color:var(--texto)}
+.nosotros-intro{font-size:16px;line-height:1.75;color:var(--texto)}
 .nosotros-intro p{margin-bottom:16px}
 .nosotros-grid{
   margin-top:56px;
@@ -3073,10 +3073,22 @@ function cargarTablaClientes(){
         <tr>
           <td>${d.email||""}</td>
           <td><span class="badge-estado ${habilitado?"badge-habilitado":"badge-deshabilitado"}">${habilitado?"Habilitado":"Deshabilitado"}</span></td>
-          <td><button class="btn-toggle-cliente" data-uid="${doc.id}" data-habilitado="${habilitado}">${habilitado?"Deshabilitar":"Habilitar"}</button></td>
+          <td style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn-toggle-cliente" data-uid="${doc.id}" data-habilitado="${habilitado}">${habilitado?"Deshabilitar":"Habilitar"}</button>
+            <button class="btn-toggle-cliente" data-reset-email="${d.email||""}">Restablecer contraseña</button>
+          </td>
         </tr>`;
       }).join("");
-      cuerpo.querySelectorAll(".btn-toggle-cliente").forEach(btn=>{
+      cuerpo.querySelectorAll("[data-reset-email]").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          const email = btn.dataset.resetEmail;
+          if(!email){ mostrarToast("Ese cliente no tiene email cargado"); return; }
+          auth.sendPasswordResetEmail(email)
+            .then(()=> mostrarToast(`Mail de restablecimiento enviado a ${email}`))
+            .catch(()=> mostrarToast("No se pudo enviar el mail de restablecimiento"));
+        });
+      });
+      cuerpo.querySelectorAll(".btn-toggle-cliente[data-uid]").forEach(btn=>{
         btn.addEventListener("click", ()=>{
           const nuevoEstado = btn.dataset.habilitado !== "true";
           db.collection("clientes").doc(btn.dataset.uid).update({habilitado: nuevoEstado})
