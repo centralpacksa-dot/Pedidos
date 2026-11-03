@@ -9,9 +9,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+
+
 <style>
 /* ============================================================
    CENTRAL PACK — hoja de estilos
@@ -806,7 +806,7 @@ p{margin:0}
     </div>
     <div class="footer-bottom">
       <span>&copy; <span id="anioActual"></span> Central Pack</span>
-      <a href="#" id="btnAdminFooter">Acceso administrador</a>
+      <a href="https://zesty-tapioca-0614c8.netlify.app" id="btnAdminFooter">Acceso administrador</a>
     </div>
   </div>
 </footer>
@@ -835,7 +835,7 @@ p{margin:0}
   <div class="admin-modal">
     <button class="admin-cerrar" id="cerrarLogin">&#10005;</button>
     <h3>Iniciar sesión</h3>
-    <p class="info" id="loginInfo">Si sos cliente registrado de Central Pack, ingresá con el email y la contraseña que te dimos para ver precios y hacer pedidos.</p>
+    <p class="info" id="loginInfo">Si sos cliente de Central Pack, ingresá para ver precios y hacer pedidos. Si todavía no tenés cuenta, creala y te habilitamos a la brevedad.</p>
     <div class="aviso-error" id="errorLogin">Email o contraseña incorrectos.</div>
     <div class="aviso-ok" id="okLogin">Listo, ya iniciaste sesión.</div>
     <div class="campo">
@@ -848,6 +848,7 @@ p{margin:0}
     </div>
     <button class="btn btn-primario" style="width:100%" id="btnIniciarSesion">Ingresar</button>
     <button class="btn btn-ghost btn-chico" style="width:100%;margin-top:6px" id="btnOlvidePassword">¿Olvidaste tu contraseña?</button>
+    <button class="btn btn-ghost btn-chico" style="width:100%;margin-top:6px" id="btnRegistro">Crear cuenta nueva</button>
   </div>
 </div>
 
@@ -954,8 +955,11 @@ p{margin:0}
 
 <script>
 /* ================= DATOS ================= */
-const CATEGORIAS = ["Bolsas","Cajas","Bandejas","Envases","Papeles","Varios"];
+let CATEGORIAS = ["Bolsas","Cajas","Bandejas","Envases","Papeles","Varios"];
 const CATEGORIA_DESC = {
+  "Insumos":"Sorbetes y accesorios para tu negocio.",
+  "Maquinaria":"Dispensers y equipos.",
+  "Moldes":"Moldes de papel para repostería.",
   "Bolsas":"Bolsas Kraft, camiseta y de consorcio en todas las medidas.",
   "Cajas":"Cajas económicas y microcorrugadas para delivery.",
   "Bandejas":"Bandejas de cartón, plásticas y de aluminio.",
@@ -1832,744 +1836,7 @@ const CATALOGO_DATA = [
 
 /* Listado REAL de productos para Pedido (carrito, precios, panel admin) — viene de tu planilla,
    con el mismo nombre y código (IDProducto) que en Excel. */
-let PRODUCTOS_INICIALES = [
-  {
-    "nombre": "BANDEJA ALUMINIO F100",
-    "categoria": "Bandejas",
-    "codigo": "P00091",
-    "unidad": 265.65,
-    "pack": 23100.0,
-    "packCant": 100.0
-  },
-  {
-    "nombre": "BANDEJA DE CARTON GRIS ECO Nº2 X 100",
-    "categoria": "Bandejas",
-    "codigo": "P00001",
-    "unidad": 2500.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "BANDEJA DE CARTON GRIS ECO Nº3 X 100",
-    "categoria": "Bandejas",
-    "codigo": "P00002",
-    "unidad": 3100.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "BANDEJA DE CARTON GRIS ECO Nº4 X 100",
-    "categoria": "Bandejas",
-    "codigo": "P00003",
-    "unidad": 3900.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "BANDEJA MICRO PP 102 CELPACK",
-    "categoria": "Bandejas",
-    "codigo": "P00050",
-    "unidad": 86.25,
-    "pack": 7500.0,
-    "packCant": 100.0
-  },
-  {
-    "nombre": "BANDEJA MICRO PP 103 CELPACK",
-    "categoria": "Bandejas",
-    "codigo": "P00004",
-    "unidad": 121.9,
-    "pack": 10600.0,
-    "packCant": 100.0
-  },
-  {
-    "nombre": "BANDEJA MICRO PP 105 OVAL",
-    "categoria": "Bandejas",
-    "codigo": "P00005",
-    "unidad": 137.88,
-    "pack": 11990.0,
-    "packCant": 100.0
-  },
-  {
-    "nombre": "BANDEJA MICRO PP 107 CELPACK",
-    "categoria": "Bandejas",
-    "codigo": "P00006",
-    "unidad": 247.25,
-    "pack": 21500.0,
-    "packCant": 100.0
-  },
-  {
-    "nombre": "BOLSA CRISTAL 60 X 90 X 50",
-    "categoria": "Bolsas",
-    "codigo": "P00081",
-    "unidad": 10500.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "BOLSA DE PAPEL KRAFT N1 X 100",
-    "categoria": "Bolsas",
-    "codigo": "P00067",
-    "unidad": 1100.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "BOLSA DE PAPEL KRAFT N10 (38 X 5 X 24) X 100",
-    "categoria": "Bolsas",
-    "codigo": "P00062",
-    "unidad": 4600.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "BOLSA DE PAPEL KRAFT N4 (13 X 5 X 37) X 100",
-    "categoria": "Bolsas",
-    "codigo": "P00008",
-    "unidad": 2500.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "BOLSA DE PAPEL KRAFT N4 A (15 X 6 X 23) X 100",
-    "categoria": "Bolsas",
-    "codigo": "P00009",
-    "unidad": 2500.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "BOLSA DE PAPEL KRAFT N6 (30 X 16.5 X 7) X 100",
-    "categoria": "Bolsas",
-    "codigo": "P00051",
-    "unidad": 3000.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "BOLSA DE PAPEL KRAFT N7 (34 X 19 X 7.5) X 100",
-    "categoria": "Bolsas",
-    "codigo": "P00007",
-    "unidad": 3700.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "BOLSA KRAFT DELIVERY FC 10 (32 X 20 X 36) X 50",
-    "categoria": "Bolsas",
-    "codigo": "P00066",
-    "unidad": 18800.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "CAMISETA AD COLOR 30X40 X 100",
-    "categoria": "Bolsas",
-    "codigo": "P00010",
-    "unidad": 2200.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "CAMISETA BLANCA 40X50 X 100",
-    "categoria": "Bolsas",
-    "codigo": "P00011",
-    "unidad": 45300.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "CAMISETA BLANCA 45X60 X 100",
-    "categoria": "Bolsas",
-    "codigo": "P00087",
-    "unidad": 45000.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "CAMISETA REFORZADA 45X60 X 100",
-    "categoria": "Bolsas",
-    "codigo": "P00053",
-    "unidad": 76500.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "CAMISETA VERDE ECON. 30X40",
-    "categoria": "Bolsas",
-    "codigo": "P00065",
-    "unidad": 1500.0,
-    "pack": 25900.0,
-    "packCant": 20.0
-  },
-  {
-    "nombre": "CAMISETA VERDE ECON. 40X50",
-    "categoria": "Bolsas",
-    "codigo": "P00074",
-    "unidad": 1900.0,
-    "pack": 32500.0,
-    "packCant": 20.0
-  },
-  {
-    "nombre": "CONSORCIO NOBLEZA 60X90 X 10",
-    "categoria": "Bolsas",
-    "codigo": "P00012",
-    "unidad": 1550.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "CONSORCIO NOBLEZA 80X110 X 10",
-    "categoria": "Bolsas",
-    "codigo": "P00013",
-    "unidad": 2600.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "CONSORCIO NOBLEZA 90X120 X 10",
-    "categoria": "Bolsas",
-    "codigo": "P00014",
-    "unidad": 3100.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "CAJA 1/2 PIZZA ECO.",
-    "categoria": "Cajas",
-    "codigo": "P00015",
-    "unidad": 143.75,
-    "pack": 12500.0,
-    "packCant": 100.0
-  },
-  {
-    "nombre": "CAJA 1/2 PIZZA MICROCORRUGADA DP (32 X 16 X 4,5)",
-    "categoria": "Cajas",
-    "codigo": "P00075",
-    "unidad": 241.5,
-    "pack": 21000.0,
-    "packCant": 100.0
-  },
-  {
-    "nombre": "CAJA 1/2 PIZZA REFORZADA",
-    "categoria": "Cajas",
-    "codigo": "P00016",
-    "unidad": 194.35,
-    "pack": 16900.0,
-    "packCant": 100.0
-  },
-  {
-    "nombre": "CAJA 12 EMPANADAS",
-    "categoria": "Cajas",
-    "codigo": "P00060",
-    "unidad": 200.1,
-    "pack": 17400.0,
-    "packCant": 100.0
-  },
-  {
-    "nombre": "CAJA LOMO CHICA (20 X 14.5 X 5,5)",
-    "categoria": "Cajas",
-    "codigo": "P00019",
-    "unidad": 120.75,
-    "pack": 10500.0,
-    "packCant": 100.0
-  },
-  {
-    "nombre": "CAJA LOMO GRANDE (23 X 18 X 6)",
-    "categoria": "Cajas",
-    "codigo": "P00018",
-    "unidad": 166.75,
-    "pack": 14500.0,
-    "packCant": 100.0
-  },
-  {
-    "nombre": "CAJA MICROCORRUGADA HAMB (18 X 18 X 6.5)",
-    "categoria": "Cajas",
-    "codigo": "P00052",
-    "unidad": 212.75,
-    "pack": 18500.0,
-    "packCant": 100.0
-  },
-  {
-    "nombre": "CAJA MICROCORRUGADA HAMB Y PAPAS (25 X 14 X 10)",
-    "categoria": "Cajas",
-    "codigo": "P00017",
-    "unidad": 258.75,
-    "pack": 22500.0,
-    "packCant": 100.0
-  },
-  {
-    "nombre": "CAJA MICROCORRUGADA HAMB Y PAPAS REF. (25 X 14 X 10)",
-    "categoria": "Cajas",
-    "codigo": "P00076",
-    "unidad": 264.5,
-    "pack": 23000.0,
-    "packCant": 100.0
-  },
-  {
-    "nombre": "CAJA PIZZA CARTON (8 KG)",
-    "categoria": "Cajas",
-    "codigo": "P00020",
-    "unidad": 167.9,
-    "pack": 14600.0,
-    "packCant": 100.0
-  },
-  {
-    "nombre": "CAJA PIZZA CARTON INTERMEDIA (10 KG)",
-    "categoria": "Cajas",
-    "codigo": "P00021",
-    "unidad": 196.65,
-    "pack": 17100.0,
-    "packCant": 100.0
-  },
-  {
-    "nombre": "CAJA PIZZA CARTON REFORZADA (12 KG)",
-    "categoria": "Cajas",
-    "codigo": "P00022",
-    "unidad": 226.55,
-    "pack": 19700.0,
-    "packCant": 100.0
-  },
-  {
-    "nombre": "CAJA PIZZA MICROCORRUGADA 8P (115 gr.)",
-    "categoria": "Cajas",
-    "codigo": "P00068",
-    "unidad": 350.75,
-    "pack": 30500.0,
-    "packCant": 100.0
-  },
-  {
-    "nombre": "CAJA PIZZA MICROCORRUGADA 8P (95 gr.)",
-    "categoria": "Cajas",
-    "codigo": "P00059",
-    "unidad": 285.2,
-    "pack": 24800.0,
-    "packCant": 100.0
-  },
-  {
-    "nombre": "CAJA PIZZA MICROCORRUGADA 8P REF (120 gr.)",
-    "categoria": "Cajas",
-    "codigo": "P00069",
-    "unidad": 363.4,
-    "pack": 31600.0,
-    "packCant": 100.0
-  },
-  {
-    "nombre": "CAJA PIZZA MICROCORRUGADA CHICA (28 X 28)",
-    "categoria": "Cajas",
-    "codigo": "P00072",
-    "unidad": 274.85,
-    "pack": 23900.0,
-    "packCant": 100.0
-  },
-  {
-    "nombre": "CAJA PIZZA MICROCORRUGADA CHICA REF. (28 X 28)",
-    "categoria": "Cajas",
-    "codigo": "P00077",
-    "unidad": 340.4,
-    "pack": 29600.0,
-    "packCant": 100.0
-  },
-  {
-    "nombre": "CONO PAPAS FRITAS GRIS ECO",
-    "categoria": "Envases",
-    "codigo": "P00023",
-    "unidad": 32.2,
-    "pack": 8400.0,
-    "packCant": 300.0
-  },
-  {
-    "nombre": "ESTUCHE P/ PAPAS FRITAS KRAFT CHICO (13.7X 9X 3,4)",
-    "categoria": "Envases",
-    "codigo": "P00024",
-    "unidad": 67.85,
-    "pack": 5900.0,
-    "packCant": 100.0
-  },
-  {
-    "nombre": "ESTUCHE P/ PAPAS FRITAS KRAFT GRANDE (15.5 X12.5 X9.5)",
-    "categoria": "Envases",
-    "codigo": "P00025",
-    "unidad": 72.45,
-    "pack": 6300.0,
-    "packCant": 100.0
-  },
-  {
-    "nombre": "PANCHERA GRIS CON SOLAPA (11 X 21)",
-    "categoria": "Envases",
-    "codigo": "P00026",
-    "unidad": 17.25,
-    "pack": 7500.0,
-    "packCant": 500.0
-  },
-  {
-    "nombre": "POTE DE TELGOPOR DE HELADO 1000 GS X 20",
-    "categoria": "Envases",
-    "codigo": "P00027",
-    "unidad": 13800.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "POTE DE TELGOPOR DE HELADO 250 GS X 20",
-    "categoria": "Envases",
-    "codigo": "P00029",
-    "unidad": 5500.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "POTE DE TELGOPOR DE HELADO 500 GS X 20",
-    "categoria": "Envases",
-    "codigo": "P00028",
-    "unidad": 9200.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "POTE PLASTICO MICRO 250CC X 50",
-    "categoria": "Envases",
-    "codigo": "P00055",
-    "unidad": 0,
-    "pack": 5900.0,
-    "packCant": 1.0
-  },
-  {
-    "nombre": "POTE PLASTICO MICRO 430CC X 50",
-    "categoria": "Envases",
-    "codigo": "P00054",
-    "unidad": 0,
-    "pack": 8900.0,
-    "packCant": 1.0
-  },
-  {
-    "nombre": "POTE SALSERO SOUFFLE DARNEL NEGRO 2 OZ",
-    "categoria": "Envases",
-    "codigo": "P00056",
-    "unidad": 79.92,
-    "pack": 6950.0,
-    "packCant": 100.0
-  },
-  {
-    "nombre": "TAPA P/ POTE MICRO 150/250/380 CC X 50",
-    "categoria": "Envases",
-    "codigo": "P00057",
-    "unidad": 4500.0,
-    "pack": 3500.0,
-    "packCant": 1.0
-  },
-  {
-    "nombre": "TAPA P/ POTE SALSERO SOUFFLE 2/2.5 OZ",
-    "categoria": "Envases",
-    "codigo": "P00058",
-    "unidad": 67.27,
-    "pack": 5850.0,
-    "packCant": 100.0
-  },
-  {
-    "nombre": "VASO PLASTICO 500CC X 50 und.",
-    "categoria": "Envases",
-    "codigo": "P00061",
-    "unidad": 0,
-    "pack": 4500.0,
-    "packCant": 1.0
-  },
-  {
-    "nombre": "VASO TERMICO 120CC X 25",
-    "categoria": "Envases",
-    "codigo": "P00063",
-    "unidad": 1800.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "VASO TERMICO 240CC X 25",
-    "categoria": "Envases",
-    "codigo": "P00082",
-    "unidad": 2400.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "GUANTES NITRILO X 100",
-    "categoria": "Varios",
-    "codigo": "P00030",
-    "unidad": 12100.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "FILM PVC ALUMAX COD. 300 38CM.",
-    "categoria": "Papeles",
-    "codigo": "P00073",
-    "unidad": 6200.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "FILM PVC FAMILIAR 30 CM INCA",
-    "categoria": "Papeles",
-    "codigo": "P00031",
-    "unidad": 1350.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "FONDO PIZZA SATINADO (32 X 32) X KG",
-    "categoria": "Papeles",
-    "codigo": "P00078",
-    "unidad": 4990.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "LAMINA FOLEX 20 X 25 X KG",
-    "categoria": "Papeles",
-    "codigo": "P00033",
-    "unidad": 15000.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "LAMINA FOLEX 25 X 35 X KG ECO.",
-    "categoria": "Papeles",
-    "codigo": "P00049",
-    "unidad": 11700.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "LAMINA FOLEX AD MAPSA 13 X 13 X 500 GR",
-    "categoria": "Papeles",
-    "codigo": "P00032",
-    "unidad": 9600.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "PAPEL ALUMINIO TERMICO X KG",
-    "categoria": "Papeles",
-    "codigo": "P00064",
-    "unidad": 27600.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "PAPEL SULFITO COPSI 40 X 50 X KG",
-    "categoria": "Papeles",
-    "codigo": "P00036",
-    "unidad": 1900.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "PAPEL SULFITO COPSI 52 X 72 X KG",
-    "categoria": "Papeles",
-    "codigo": "P00037",
-    "unidad": 1900.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "PARAFINADO ANTI GRASA 25X40 BLANCO LISO (430)",
-    "categoria": "Papeles",
-    "codigo": "P00034",
-    "unidad": 49.0,
-    "pack": 18600.0,
-    "packCant": 1.0
-  },
-  {
-    "nombre": "PARAFINADO ANTI GRASA 25X40 CUAD. ROJO X KG (430)",
-    "categoria": "Papeles",
-    "codigo": "P00035",
-    "unidad": 52.0,
-    "pack": 19500.0,
-    "packCant": 1.0
-  },
-  {
-    "nombre": "PARAFINADO ANTI GRASA 36X40 CHEF. X KG.",
-    "categoria": "Papeles",
-    "codigo": "P00090",
-    "unidad": 0,
-    "pack": 14200.0,
-    "packCant": 1.0
-  },
-  {
-    "nombre": "PARAFINADO ANTI GRASA 36X40 CUAD. AZUL X KG.",
-    "categoria": "Papeles",
-    "codigo": "P00088",
-    "unidad": 0,
-    "pack": 14200.0,
-    "packCant": 1.0
-  },
-  {
-    "nombre": "PARAFINADO ANTI GRASA 36X40 CUAD. NEGRO X KG.",
-    "categoria": "Papeles",
-    "codigo": "P00089",
-    "unidad": 0,
-    "pack": 14200.0,
-    "packCant": 1.0
-  },
-  {
-    "nombre": "PARAFINADO ANTI GRASA 36X40 CUAD. ROJO X KG.",
-    "categoria": "Papeles",
-    "codigo": "P00071",
-    "unidad": 0,
-    "pack": 14200.0,
-    "packCant": 1.0
-  },
-  {
-    "nombre": "ROLLO DE ALUMINIO ECONOMICO X 1KG",
-    "categoria": "Papeles",
-    "codigo": "P00092",
-    "unidad": 10600.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "ROLLO DE ALUMINIO X 1KG",
-    "categoria": "Papeles",
-    "codigo": "P00038",
-    "unidad": 12500.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "SERVILLETA 18 X 21 NEWPEL X 1000",
-    "categoria": "Papeles",
-    "codigo": "P00039",
-    "unidad": 8300.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "SERVILLETA NEVADA 33 X 33 X KG",
-    "categoria": "Papeles",
-    "codigo": "P00070",
-    "unidad": 6300.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "SERVILLETA PROD. 33 X 33 X KG",
-    "categoria": "Papeles",
-    "codigo": "P00084",
-    "unidad": 8000.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "BANDA ELASTICA FLEXIBAND 40MM X 50gr",
-    "categoria": "Varios",
-    "codigo": "P00040",
-    "unidad": 1100.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "CINTA ADHESIVA 48 mm X 50 TRANSP",
-    "categoria": "Varios",
-    "codigo": "P00041",
-    "unidad": 1500.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "CINTA DE PAPEL 12 mm X 50",
-    "categoria": "Varios",
-    "codigo": "P00042",
-    "unidad": 1500.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "CINTA DE PAPEL 36mm X 40",
-    "categoria": "Varios",
-    "codigo": "P00079",
-    "unidad": 3400.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "CUCHARA PARA HELADO COLORES X KG",
-    "categoria": "Varios",
-    "codigo": "P00044",
-    "unidad": 6500.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "CUCHARA PARA HELADO NEGRA X KG",
-    "categoria": "Varios",
-    "codigo": "P00043",
-    "unidad": 6200.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "CUCHILLO PLASTICO NEGRO ECO.",
-    "categoria": "Varios",
-    "codigo": "P00085",
-    "unidad": 19.78,
-    "pack": 17200.0,
-    "packCant": 1000.0
-  },
-  {
-    "nombre": "ESCARBADIENTE GRANEL X 1000",
-    "categoria": "Varios",
-    "codigo": "P00045",
-    "unidad": 2500.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "ESCARBADIENTE GRANEL X 3000",
-    "categoria": "Varios",
-    "codigo": "P00083",
-    "unidad": 5300.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "ESPADITA SABLE CLAUSER X 1000",
-    "categoria": "Varios",
-    "codigo": "P00046",
-    "unidad": 8300.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "HILO DE ALGODON EN OVILLO 100gr",
-    "categoria": "Varios",
-    "codigo": "P00047",
-    "unidad": 1200.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "PALITO BROCHETTE 20cm X 100",
-    "categoria": "Varios",
-    "codigo": "P00080",
-    "unidad": 800.0,
-    "pack": 0,
-    "packCant": 0
-  },
-  {
-    "nombre": "TENEDOR PLASTICO NEGRO ECO.",
-    "categoria": "Varios",
-    "codigo": "P00086",
-    "unidad": 19.78,
-    "pack": 17200.0,
-    "packCant": 1000.0
-  },
-  {
-    "nombre": "TRIDENTE PARA PIZZA X KG",
-    "categoria": "Varios",
-    "codigo": "P00048",
-    "unidad": 3700.0,
-    "pack": 0,
-    "packCant": 0
-  }
-];
+let PRODUCTOS_INICIALES = [];
 
 let CONFIG = { envioGratisDesde: 12000, whatsapp: "543865769832" };
 
@@ -2582,25 +1849,8 @@ let textoBusqueda = "";
 let ordenTipo = "";
 
 /* ================= FIREBASE (cuentas de clientes + admin) ================= */
-const firebaseConfig = {
-  apiKey: "AIzaSyDfbsvxnX3yOdVKJ-bcgK9rXKKCwPCNwO8",
-  authDomain: "central-pack.firebaseapp.com",
-  projectId: "central-pack",
-  storageBucket: "central-pack.firebasestorage.app",
-  messagingSenderId: "626875478630",
-  appId: "1:626875478630:web:f880c560836281fcceb3a7"
-};
-// Email que tiene permisos de administrador. Tiene que coincidir con la cuenta
-// que crees en Firebase Authentication y con las reglas de Firestore.
 const ADMIN_EMAIL = "centralpack.sa@gmail.com";
-
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
-// App secundaria: sirve para que el admin pueda crear cuentas de clientes
-// sin que eso cierre su propia sesión.
-const appSecundaria = firebase.initializeApp(firebaseConfig, "Secundaria");
-const authSecundaria = appSecundaria.auth();
+const sb = supabase.createClient('https://unwdtsxbmbtrcdxccgvc.supabase.co','sb_publishable_HjgaOJ43vvKfbtlfI_YVEQ_x2CsEhOg');
 
 let usuarioActual = null;      // usuario de Firebase logueado (cliente o admin)
 let clienteHabilitado = false; // true si puede ver precios
@@ -2963,7 +2213,7 @@ function cerrarAdminOverlays(){
   document.getElementById("adminPanelOverlay").classList.remove("activo");
 }
 
-document.getElementById("btnAdminFooter").addEventListener("click", (e)=>{
+void ("click", (e)=>{
   e.preventDefault();
   if(esAdmin){ abrirAdminPanel(); }
   else if(usuarioActual){ mostrarToast("Esta cuenta no tiene permisos de administrador"); }
@@ -2972,7 +2222,7 @@ document.getElementById("btnAdminFooter").addEventListener("click", (e)=>{
 document.getElementById("btnLoginNav").addEventListener("click", ()=>{
   if(usuarioActual){
     if(confirm(`¿Cerrar sesión de ${usuarioActual.email}?`)){
-      auth.signOut();
+      sb.auth.signOut();
       mostrarToast("Sesión cerrada");
     }
   } else {
@@ -2994,12 +2244,12 @@ function intentarLogin(){
     errorEl.classList.add("mostrar");
     return;
   }
-  auth.signInWithEmailAndPassword(email, pass)
-    .then(()=>{ cerrarOverlaysLogin(); })
-    .catch(()=>{
+  sb.auth.signInWithPassword({email, password: pass}).then(({error})=>{
+    if(error){
       errorEl.textContent = "Email o contraseña incorrectos.";
       errorEl.classList.add("mostrar");
-    });
+    } else { cerrarOverlaysLogin(); }
+  });
 }
 
 document.getElementById("btnOlvidePassword").addEventListener("click", ()=>{
@@ -3008,44 +2258,69 @@ document.getElementById("btnOlvidePassword").addEventListener("click", ()=>{
     mostrarToast("Escribí tu email arriba y volvé a tocar el botón");
     return;
   }
-  auth.sendPasswordResetEmail(email)
-    .then(()=> mostrarToast("Te enviamos un email para restablecer tu contraseña"))
-    .catch(()=> mostrarToast("No pudimos enviar el email. Revisá que esté bien escrito."));
+  sb.auth.resetPasswordForEmail(email).then(({error})=>{
+    mostrarToast(error ? "No pudimos enviar el email. Revisá que esté bien escrito." : "Te enviamos un email para restablecer tu contraseña");
+  });
 });
 
 document.getElementById("btnCerrarSesionAdmin").addEventListener("click", ()=>{
-  auth.signOut();
+  sb.auth.signOut();
   cerrarAdminOverlays();
   mostrarToast("Sesión cerrada");
 });
 
 /* Reacciona a cualquier login/logout, de clientes o del admin */
-auth.onAuthStateChanged((user)=>{
-  usuarioActual = user;
-  esAdmin = !!(user && user.email && user.email.trim().toLowerCase() === ADMIN_EMAIL.trim().toLowerCase());
-
-  const terminar = ()=>{
-    document.getElementById("sesionDot").classList.toggle("activa", !!user);
-    document.getElementById("btnLoginNav").title = user ? `Sesión: ${user.email}` : "Iniciar sesión";
-    filtrarTodo();
-    actualizarTotalesSolo();
-    if(intencionLogin === "admin"){
-      if(esAdmin){ abrirAdminPanel(); }
-      else if(user){ mostrarToast("Esta cuenta no tiene permisos de administrador"); }
-      intencionLogin = null;
+let _uid = undefined;
+async function cargarCatalogo(){
+  const {data:cat, error} = await sb.from('v_catalogo_web').select('*').order('nombre');
+  if(error){ mostrarToast("No se pudo cargar el catálogo. Probá de nuevo en unos minutos."); return; }
+  const pr = {};
+  if(clienteHabilitado){
+    const {data} = await sb.from('v_precios_web').select('*');
+    (data||[]).forEach(x=>{ pr[x.codigo] = x; });
+  }
+  PRODUCTOS_INICIALES = cat.map(c=>{
+    const x = pr[c.codigo] || {}, pk = c.unidad==='Pack' && c.pack_cant>1;
+    return {nombre:c.nombre, subcategoria:c.subcategoria||"", categoria:c.categoria||"Varios", codigo:c.codigo,
+            unidad:Number(x.precio_unitario||0), pack: pk ? Number(x.precio_pack||0) : 0, packCant: pk ? Number(c.pack_cant) : 0, img:c.imagen_url||""};
+  });
+  productos = PRODUCTOS_INICIALES.map(p=>({...p}));
+  const orden = ["Bolsas","Cajas","Bandejas","Envases","Papeles","Varios"], cs = [...new Set(productos.map(p=>p.categoria))];
+  CATEGORIAS = [...orden.filter(c=>cs.includes(c)), ...cs.filter(c=>!orden.includes(c)).sort()];
+  renderChips(); filtrarTodo(); renderCatalogoChips(); renderCatalogo(); actualizarTotalesSolo();
+}
+async function aplicarSesion(user){
+  usuarioActual = user; esAdmin = false; clienteHabilitado = false;
+  if(user){
+    const {data:w} = await sb.from('clientes_web').select('habilitado').eq('user_id', user.id).maybeSingle();
+    clienteHabilitado = !!(w && w.habilitado);
+    if(!clienteHabilitado){
+      const {data:pf} = await sb.from('perfiles').select('rol,activo').eq('id', user.id).maybeSingle();
+      if(pf && pf.activo && pf.rol==='admin'){ esAdmin = true; clienteHabilitado = true; }
+      else if(w){ mostrarToast("Tu cuenta está pendiente de habilitación. Te avisamos a la brevedad."); }
     }
-  };
-
-  if(!user){ clienteHabilitado = false; terminar(); return; }
-  if(esAdmin){ clienteHabilitado = true; terminar(); return; }
-
-  db.collection("clientes").doc(user.uid).get().then(doc=>{
-    clienteHabilitado = doc.exists && doc.data().habilitado === true;
-    if(doc.exists && !clienteHabilitado){
-      mostrarToast("Tu cuenta está deshabilitada. Consultá con Central Pack.");
-    }
-    terminar();
-  }).catch(()=>{ clienteHabilitado = false; terminar(); });
+  }
+  document.getElementById("sesionDot").classList.toggle("activa", !!user);
+  document.getElementById("btnLoginNav").title = user ? `Sesión: ${user.email}` : "Iniciar sesión";
+  await cargarCatalogo();
+}
+sb.auth.onAuthStateChange((ev, session)=>{
+  if(ev==='TOKEN_REFRESHED') return;
+  const id = session ? session.user.id : null;
+  if(id===_uid) return;
+  _uid = id;
+  setTimeout(()=>aplicarSesion(session ? session.user : null), 0);
+});
+document.getElementById("btnRegistro").addEventListener("click", async ()=>{
+  const email = document.getElementById("loginEmail").value.trim();
+  const pass = document.getElementById("loginPassword").value;
+  const er = document.getElementById("errorLogin");
+  er.classList.remove("mostrar");
+  if(!email || pass.length<6){ er.textContent = "Escribí tu email y una contraseña de al menos 6 caracteres."; er.classList.add("mostrar"); return; }
+  const {error} = await sb.auth.signUp({email, password: pass, options:{data:{origen:'web'}}});
+  if(error){ er.textContent = "No se pudo crear la cuenta: " + error.message; er.classList.add("mostrar"); return; }
+  cerrarOverlaysLogin();
+  mostrarToast("Cuenta creada. Confirmá tu email y Central Pack te habilitará los precios.");
 });
 
 function abrirAdminPanel(){
