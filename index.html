@@ -807,7 +807,7 @@ p{margin:0}
     </div>
     <div class="footer-bottom">
       <span>&copy; <span id="anioActual"></span> Central Pack</span>
-      <a href="https://zesty-tapioca-0614c8.netlify.app" id="btnAdminFooter">Acceso administrador</a>
+      <a href="https://www.centralpack.ar/app/" id="btnAdminFooter">Acceso administrador</a>
     </div>
   </div>
 </footer>
@@ -1851,7 +1851,7 @@ let ordenTipo = "";
 
 /* ================= FIREBASE (cuentas de clientes + admin) ================= */
 const ADMIN_EMAIL = "centralpack.sa@gmail.com";
-const sb = supabase.createClient('https://unwdtsxbmbtrcdxccgvc.supabase.co','sb_publishable_HjgaOJ43vvKfbtlfI_YVEQ_x2CsEhOg');
+const sb = supabase.createClient('https://mvmliwquioavtqcvseac.supabase.co','sb_publishable_pervLVwwY8Bn7_y25GrjrA_ZDSvJhrQ');
 
 let usuarioActual = null;      // usuario de Firebase logueado (cliente o admin)
 let clienteHabilitado = false; // true si puede ver precios
@@ -2274,11 +2274,11 @@ document.getElementById("btnCerrarSesionAdmin").addEventListener("click", ()=>{
 /* Reacciona a cualquier login/logout, de clientes o del admin */
 let _uid = undefined;
 async function cargarCatalogo(){
-  const {data:cat, error} = await sb.from('v_catalogo_web').select('*').order('nombre');
+  const {data:cat, error} = await sb.rpc('catalogo_web').select('*').order('nombre');
   if(error){ mostrarToast("No se pudo cargar el catálogo. Probá de nuevo en unos minutos."); return; }
   const pr = {};
   if(clienteHabilitado){
-    const {data} = await sb.from('v_precios_web').select('*');
+    const {data} = await sb.rpc('precios_web').select('*');
     (data||[]).forEach(x=>{ pr[x.codigo] = x; });
   }
   PRODUCTOS_INICIALES = cat.map(c=>{
@@ -2286,6 +2286,7 @@ async function cargarCatalogo(){
     return {nombre:c.nombre, subcategoria:c.subcategoria||"", categoria:c.categoria||"Varios", codigo:c.codigo, descripcion:c.descripcion||"",
             unidad:Number(x.precio_unitario||0), pack: pk ? Number(x.precio_pack||0) : 0, packCant: pk ? Number(c.pack_cant) : 0, img:c.imagen_url||""};
   });
+  if(!cat.length) mostrarToast("Estamos actualizando el catálogo. Consultanos por WhatsApp.");
   productos = PRODUCTOS_INICIALES.map(p=>({...p}));
   const orden = ["Bolsas","Cajas","Bandejas","Envases","Papeles","Varios"], cs = [...new Set(productos.map(p=>p.categoria))];
   CATEGORIAS = [...orden.filter(c=>cs.includes(c)), ...cs.filter(c=>!orden.includes(c)).sort()];
