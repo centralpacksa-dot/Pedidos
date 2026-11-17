@@ -98,13 +98,15 @@ function login(){app.innerHTML=`<main><h2>Central Pack</h2><label>Correo<input i
  const go=async()=>{const{error}=await sb.auth.signInWithPassword({email:e.value.trim(),password:p.value});if(error)m.textContent='No se pudo ingresar: '+error.message;else boot()};
  document.getElementById('go').onclick=go;p.onkeydown=ev=>{if(ev.key==='Enter')go()}}
 async function boot(){const{data:{session}}=await sb.auth.getSession();if(!session)return login();
+ const{data:aal}=await sb.auth.mfa.getAuthenticatorAssuranceLevel();if(aal&&aal.nextLevel==='aal2'&&aal.currentLevel!=='aal2')return mfaChallenge();
  const{data:u}=await sb.from('perfiles').select('nombre,rol,activo').eq('id',session.user.id).maybeSingle();
  if(!u||!u.activo)return msg('Tu usuario todavía no fue activado. Pedile al administrador que lo habilite.');
  me=u;admin=u.rol==='admin';
+ try{const{data:mf}=await sb.auth.mfa.listFactors();window.MFAN=((mf&&mf.totp)||[]).filter(x=>x.status==='verified').length}catch(e){window.MFAN=null}
  app.innerHTML=`<header><b>CENTRAL PACK</b><button class=hb onclick="gsOpen()"><span>🔍</span> Buscar</button><button onclick="sb.auth.signOut().then(()=>location.reload())">Salir</button></header>${sidebar()}<main id=main></main>
  <nav><a href="#/inicio" data-r=inicio><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Inicio</a><a href="#/clientes" data-r=clientes><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M21 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg>Clientes</a><a href="#/productos" data-r=productos><svg viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3.3 7L12 12l8.7-5M12 22V12"/></svg>Productos</a><a href="#/pedido" data-r=pedido><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Pedido</a><a href="#/mas" data-r=mas><svg viewBox="0 0 24 24"><path d="M5 12h.01M12 12h.01M19 12h.01" stroke-width="3.6"/></svg>Más</a></nav>`;
  main=document.getElementById('main');route()}
-const MENU=[['','Ventas'],['#/pedido','Nuevo pedido','pedido'],['#/pedidos','Pedidos','pedidos'],['#/clientes','Clientes','clientes'],['','Catálogo'],['#/productos','Productos','productos'],['#/compra','Registrar compra','compra',1],['#/inmov','Stock inmovilizado','inmov',1],['','Análisis'],['#/inicio','Inicio','inicio'],['#/estadisticas','Estadísticas','estadisticas',1],['#/notas','Notas','notas'],['','Sistema'],['#/respaldo','Respaldo completo','respaldo',1],['#/web','Cuentas de la web','web',1]];
+const MENU=[['','Ventas'],['#/pedido','Nuevo pedido','pedido'],['#/pedidos','Pedidos','pedidos'],['#/clientes','Clientes','clientes'],['','Catálogo'],['#/productos','Productos','productos'],['#/compra','Registrar compra','compra',1],['#/inmov','Stock inmovilizado','inmov',1],['','Análisis'],['#/inicio','Inicio','inicio'],['#/estadisticas','Estadísticas','estadisticas',1],['#/notas','Notas','notas'],['','Sistema'],['#/respaldo','Respaldo completo','respaldo',1],['#/auditoria','Auditoría','auditoria',1],['#/seguridad','Seguridad','seguridad'],['#/web','Cuentas de la web','web',1]];
 const sidebar=()=>`<aside id=sd>${MENU.filter(x=>!x[3]||admin).map(x=>x[0]?`<a href="${x[0]}" data-s="${x[2]}">${x[1]}</a>`:`<h4>${x[1]}</h4>`).join('')}</aside>`;
 let GS=null;
 async function gsLoad(){if(GS&&Date.now()-GS.t<12e4)return GS;const[c,p]=await Promise.all([all(()=>sb.rpc('clientes_resumen').select('id,nombre,razon_social,telefono,zona')),prods()]);GS={c,p,t:Date.now()};return GS}
@@ -121,10 +123,10 @@ function gsOpen(){
   G.p.filter(x=>norm(x.nombre+' '+x.codigo+' '+(x.descripcion||'')).includes(t)).slice(0,6).forEach(x=>{h+=`<a data-p="${esc(q.value.trim())}"><span><b>${esc(x.nombre)}</b> · ${esc(x.codigo)}</span><small class=mut>Producto · stock ${x.stock}</small></a>`});
   if(k===tk)r.innerHTML=h||'<p class=mut style="padding:8px 12px">Sin resultados</p>'}}
 document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();gsOpen()}if(e.key==='Escape'){const g=document.getElementById('gs');if(g)g.remove()}});
-const R={inicio,clientes,productos,pedido,cliente,web,compra,pedidoedit,mas,estadisticas,notas,nota,inmov,pedidos,respaldo,precios};
+const R={inicio,clientes,productos,pedido,cliente,web,compra,pedidoedit,mas,estadisticas,notas,nota,inmov,pedidos,respaldo,precios,seguridad,auditoria};
 async function route(){const[r,a]=(location.hash||'#/inicio').slice(2).split('/');const k=R[r]?r:'inicio';
  document.querySelectorAll('#sd a').forEach(x=>x.classList.toggle('on',x.dataset.s===(k==='cliente'?'clientes':k==='nota'?'notas':k==='pedidoedit'?'pedidos':k)));
- document.querySelectorAll('nav a').forEach(x=>x.classList.toggle('on',x.dataset.r===(k==='cliente'?'clientes':['estadisticas','notas','nota','compra','web','mas','inmov','pedidos','respaldo','precios'].includes(k)?'mas':k)));
+ document.querySelectorAll('nav a').forEach(x=>x.classList.toggle('on',x.dataset.r===(k==='cliente'?'clientes':['estadisticas','notas','nota','compra','web','mas','inmov','pedidos','respaldo','precios','seguridad','auditoria'].includes(k)?'mas':k)));
  main.onclick=main.onchange=main.oninput=null;main.innerHTML='<p class=mut>Cargando…</p>';try{await R[k](a)}catch(e){main.innerHTML='<p class=err>'+esc(e.message||e)+'</p>'}}
 addEventListener('hashchange',()=>main&&route());
 document.addEventListener('click',e=>{const a=e.target.closest('a[href^="#/"]');if(a&&main&&a.getAttribute('href')===location.hash){e.preventDefault();route()}});
@@ -297,7 +299,7 @@ async function pedidoedit(id){
   if(eest.value==='cancelado'&&p.estado!=='cancelado'){const{data:pg}=await sb.from('pagos').select('monto,tipo').eq('pedido_id',id);const t=(pg||[]).reduce((a,x)=>a+(x.tipo==='devolucion'?-1:1)*x.monto,0);
    if(t>0.5&&confirm('Este pedido tenía pagos por '+money(t)+'.\n\nAceptar = registrar ahora la devolución de ese dinero al cliente.\nCancelar = dejarlo como saldo a favor del cliente (crédito para sus próximos pedidos).')){const{error:e3}=await sb.from('pagos').insert({cliente_id:p.cliente_id,pedido_id:+id,monto:t,medio:'efectivo',fecha:hoy(),tipo:'devolucion',nota:'Devolución por pedido cancelado #'+id});if(e3)return m.textContent=e3.message}}
   P=null;ST=null;GS=null;m.className='';m.textContent='✔ Cambios guardados';setTimeout(()=>pedidoedit(id),700)}}
-function mas(){main.innerHTML=`<h2>Más</h2>${[['#/respaldo','Respaldo completo','Descargá una copia de todos tus datos',1],['#/pedidos','Pedidos','Buscá cualquier pedido por número, fecha o cliente',0],['#/estadisticas','Estadísticas','Ventas, ganancias, productos y clientes',1],['#/inmov','Stock inmovilizado','Capital parado en productos que no se venden',1],['#/notas','Notas','Tareas pendientes, proveedores y apuntes',0],['#/compra','Registrar compra','Cargá compras con su flete',1],['#/web','Cuentas de la web','Aprobá a los clientes que se registran',1]].filter(x=>!x[3]||admin).map(([h,t,d])=>`<a class=row href="${h}" style="text-decoration:none;color:inherit"><div><b>${t}</b><br><small>${d}</small></div><span class=mut>›</span></a>`).join('')}`}
+function mas(){main.innerHTML=`<h2>Más</h2>${[['#/seguridad','Seguridad','Verificación en dos pasos y dispositivos',0],['#/auditoria','Auditoría','Quién cambió o borró qué',1],['#/respaldo','Respaldo completo','Descargá una copia de todos tus datos',1],['#/pedidos','Pedidos','Buscá cualquier pedido por número, fecha o cliente',0],['#/estadisticas','Estadísticas','Ventas, ganancias, productos y clientes',1],['#/inmov','Stock inmovilizado','Capital parado en productos que no se venden',1],['#/notas','Notas','Tareas pendientes, proveedores y apuntes',0],['#/compra','Registrar compra','Cargá compras con su flete',1],['#/web','Cuentas de la web','Aprobá a los clientes que se registran',1]].filter(x=>!x[3]||admin).map(([h,t,d])=>`<a class=row href="${h}" style="text-decoration:none;color:inherit"><div><b>${t}</b><br><small>${d}</small></div><span class=mut>›</span></a>`).join('')}`}
 
 let ST=null,CH=[],ESF={d:'',h:'',g:'dia',v:'gen',m:'ventas'};
 const dd=s=>new Date(s+'T00:00:00'),fi=x=>x.toLocaleDateString('sv'),ad=(s,n)=>{const x=dd(s);x.setDate(x.getDate()+n);return fi(x)},gid=i=>document.getElementById(i);
@@ -348,7 +350,10 @@ async function estadisticas(){
 
 const TBL=['configuracion','perfiles','clientes','prospectos','proveedores','productos','productos_costos','pedidos','pedido_items','pedido_items_costos','pagos','presupuestos','presupuesto_items','compras','compra_items','movimientos_stock','lotes_stock','pedido_item_lotes','clientes_web','notas','auditoria'];
 const OC={productos_costos:'producto_id',pedido_items_costos:'item_id',clientes_web:'user_id',pedido_item_lotes:'item_id'};
-const bk=()=>{if(!admin)return'';const t=localStorage.getItem('cp_resp'),d=t?Math.floor((Date.now()-(+t))/864e5):null;return d!=null&&d<=3?'':`<a class=row href="#/respaldo" style="text-decoration:none;color:inherit;border-color:#e0b4ac;background:#fdf3f1"><div><b>Hacé un respaldo de tus datos</b><br><small>${d==null?'Todavía no hiciste ninguno desde este navegador.':'El último fue hace '+d+' días.'}</small></div><span>›</span></a>`};
+const bk=()=>{if(!admin)return'';const t=localStorage.getItem('cp_resp'),d=t?Math.floor((Date.now()-(+t))/864e5):null;
+ let h=d!=null&&d<=3?'':`<a class=row href="#/respaldo" style="text-decoration:none;color:inherit;border-color:#e0b4ac;background:#fdf3f1"><div><b>Hacé un respaldo de tus datos</b><br><small>${d==null?'Todavía no hiciste ninguno desde este navegador.':'El último fue hace '+d+' días.'}</small></div><span>›</span></a>`;
+ if(window.MFAN!=null&&window.MFAN<2)h+=`<a class=row href="#/seguridad" style="text-decoration:none;color:inherit;border-color:#e0b4ac;background:#fdf3f1"><div><b>Activá la verificación en dos pasos</b><br><small>${window.MFAN===1?'Tenés 1 dispositivo: registrá un segundo, por si perdés el primero.':'Protege tu sistema aunque alguien conozca tu contraseña.'}</small></div><span>›</span></a>`;
+ return h};
 async function respaldo(){
  if(!admin){main.innerHTML='<p>Solo el administrador.</p>';return}
  const t=localStorage.getItem('cp_resp');
@@ -396,6 +401,48 @@ async function precios(){
   xa.disabled=true;let err=null;
   for(let i=0;i<L.length&&!err;i+=10){const r=await Promise.all(L.slice(i,i+10).map(r=>sb.from('productos').update({precio_unitario:r.nu,precio_pack:r.np}).eq('id',r.x.id)));err=(r.find(z=>z.error)||{}).error}
   xa.disabled=false;if(err)return m.textContent='Se cortó a mitad de camino: '+err.message;P=null;PA=null;m.className='';m.textContent='✔ Precios actualizados.';draw()}}
+
+async function mfaChallenge(){
+ const{data:f}=await sb.auth.mfa.listFactors();const fs=((f&&f.totp)||[]).filter(x=>x.status==='verified');
+ app.innerHTML=`<main><h2>Verificación en dos pasos</h2><p class=mut>Abrí tu app autenticadora e ingresá el código de 6 dígitos de Central Pack.</p>${fs.length>1?`<label>Dispositivo<select id=mf>${fs.map(x=>`<option value=${x.id}>${esc(x.friendly_name||'Autenticador')}</option>`).join('')}</select></label>`:''}<label>Código<input id=mc inputmode=numeric autocomplete=one-time-code maxlength=6></label><button class=btn id=mg>Verificar</button><button class="btn s" id=mx>Salir</button><p id=mm class=err></p></main>`;
+ const go=async()=>{const fid=gid('mf')?gid('mf').value:fs[0].id;const{data:ch,error:e1}=await sb.auth.mfa.challenge({factorId:fid});if(e1)return mm.textContent=e1.message;
+  const{error}=await sb.auth.mfa.verify({factorId:fid,challengeId:ch.id,code:mc.value.trim()});if(error)return mm.textContent='Código incorrecto o vencido. Probá con el que muestra ahora la app.';boot()};
+ mg.onclick=go;mc.onkeydown=e=>{if(e.key==='Enter')go()};mx.onclick=()=>sb.auth.signOut().then(()=>location.reload());mc.focus()}
+async function seguridad(){
+ const{data:f}=await sb.auth.mfa.listFactors();const fs=(f&&f.totp)||[],ver=fs.filter(x=>x.status==='verified');window.MFAN=ver.length;
+ main.innerHTML=`<a href="#/mas">← Más</a><h2>Seguridad</h2>
+ <div class=k>Verificación en dos pasos<b class="${ver.length>=2?'':'deb'}">${ver.length>=2?'Activa (2 dispositivos)':ver.length===1?'Activa con 1 dispositivo':'No activada'}</b><small class=mut>${ver.length<2?'Recomendado: registrá dos dispositivos, así perder uno no te deja afuera.':'Si perdés un dispositivo, entrás con el otro.'}</small></div>
+ <h3>Dispositivos registrados</h3>${ver.map(x=>`<div class=row><div><b>${esc(x.friendly_name||'Autenticador')}</b><br><small class=mut>Registrado el ${(x.created_at||'').slice(0,10)}</small></div><button class="btn s" style="width:auto;color:#a00;border-color:#a00" data-del=${x.id}>Quitar</button></div>`).join('')||'<p class=mut>Ninguno todavía.</p>'}
+ <h3>Agregar un dispositivo</h3><label>Nombre<input id=sn value="${ver.length?'Dispositivo '+(ver.length+1):'Celular'}"></label><button class=btn id=sa>Generar código QR</button><div id=sq></div><p id=m class=err></p>`;
+ main.onclick=async e=>{const id=e.target.dataset.del;if(!id)return;if(ver.length<2&&!confirm('Es tu único dispositivo. Si lo quitás, queda sin verificación en dos pasos. ¿Seguro?'))return;if(!confirm('¿Quitar este dispositivo?'))return;const{error}=await sb.auth.mfa.unenroll({factorId:id});if(error)return m.textContent=error.message;seguridad()};
+ sa.onclick=async()=>{sa.disabled=true;m.textContent='';
+  for(const x of fs.filter(x=>x.status!=='verified'))await sb.auth.mfa.unenroll({factorId:x.id});
+  const{data,error}=await sb.auth.mfa.enroll({factorType:'totp',friendlyName:sn.value.trim()||'Autenticador'});
+  if(error){sa.disabled=false;return m.textContent=error.message}
+  sq.innerHTML=`<div class=k style="margin-top:12px"><p>1. Escaneá este código con tu app autenticadora (Google Authenticator, Microsoft Authenticator o Authy).</p><img src="${data.totp.qr_code}" alt="QR" style="width:200px;height:200px;background:#fff;display:block;margin:8px 0"><p class=mut><small>Si no podés escanearlo, ingresá esta clave a mano: <b>${data.totp.secret}</b></small></p><p>2. Escribí el código de 6 dígitos que muestra la app:</p><input id=sc inputmode=numeric maxlength=6><button class=btn id=sv2>Activar</button></div>`;
+  sv2.onclick=async()=>{const{data:ch,error:e1}=await sb.auth.mfa.challenge({factorId:data.id});if(e1)return m.textContent=e1.message;const{error:e2}=await sb.auth.mfa.verify({factorId:data.id,challengeId:ch.id,code:sc.value.trim()});if(e2)return m.textContent='Código incorrecto. Probá con el que muestra ahora la app.';seguridad()}}}
+let AF={t:'',o:'',d:'',q:'',n:200};
+async function auditoria(){
+ if(!admin){main.innerHTML='<p>Solo el administrador.</p>';return}
+ let q=sb.from('auditoria').select('id,fecha,usuario,tabla,operacion,fila,antes,despues').order('id',{ascending:false});
+ if(AF.t)q=q.eq('tabla',AF.t);if(AF.o)q=q.eq('operacion',AF.o);if(AF.d)q=q.gte('fecha',AF.d+'T00:00:00');if(AF.q)q=q.eq('fila',AF.q.trim());
+ const hace30=new Date(Date.now()-30*864e5).toISOString();
+ const[{data:au,error},{data:pf},tot,bor]=await Promise.all([q.range(0,AF.n-1),sb.from('perfiles').select('id,nombre'),sb.from('auditoria').select('id',{count:'exact',head:true}),sb.from('auditoria').select('id',{count:'exact',head:true}).eq('operacion','DELETE').gte('fecha',hace30)]);
+ if(error)throw error;
+ const U=Object.fromEntries((pf||[]).map(x=>[x.id,x.nombre])),fm=v=>v==null?'—':String(typeof v==='object'?JSON.stringify(v):v).slice(0,40);
+ const sm=x=>{if(x.operacion==='UPDATE'){const a=x.antes||{},b=x.despues||{},ch=Object.keys(b).filter(k=>JSON.stringify(a[k])!==JSON.stringify(b[k]));return ch.map(k=>k+': '+fm(a[k])+' → '+fm(b[k])).join(' · ')||'(sin cambios)'}
+  const o=(x.operacion==='DELETE'?x.antes:x.despues)||{};return (x.operacion==='DELETE'?'Se eliminó: ':'Se creó: ')+Object.entries(o).filter(([k])=>!['creado_en','id'].includes(k)).slice(0,6).map(([k,v])=>k+': '+fm(v)).join(' · ')};
+ const TB=['clientes','productos','productos_costos','proveedores','pedidos','pedido_items','pedido_items_costos','pagos','compras','compra_items','presupuestos','clientes_web','perfiles'];
+ main.innerHTML=`<a href="#/mas">← Más</a><h2>Auditoría</h2><p class=mut>Cada alta, cambio o baja queda registrada con quién la hizo, cuándo y el valor anterior. Nadie puede modificar este registro desde la app.</p>
+ <div class=grid><div class=k>Registros en total<b>${tot.count??'—'}</b></div><div class=k>Bajas en los últimos 30 días<b class="${bor.count>0?'deb':''}">${bor.count??'—'}</b></div></div>
+ <div class=grid style="margin-top:12px"><label>Tabla<select id=at><option value="">Todas</option>${TB.map(t=>`<option ${AF.t===t?'selected':''}>${t}</option>`).join('')}</select></label>
+ <label>Operación<select id=ao><option value="">Todas</option><option value=INSERT ${AF.o==='INSERT'?'selected':''}>Altas</option><option value=UPDATE ${AF.o==='UPDATE'?'selected':''}>Cambios</option><option value=DELETE ${AF.o==='DELETE'?'selected':''}>Bajas</option></select></label>
+ <label>Desde<input type=date id=ad value="${AF.d}"></label><label>N° de registro (pedido, cliente…)<input id=aq value="${esc(AF.q)}" placeholder="Ej: 390"></label></div>
+ <p class=mut>${au.length} movimientos${au.length>=AF.n?' (los más recientes)':''}</p>
+ ${au.map(x=>`<div class=row style="align-items:flex-start"><div><span class="tag ${x.operacion==='DELETE'?'bad':x.operacion==='UPDATE'?'warn':'ok'}">${x.operacion==='INSERT'?'ALTA':x.operacion==='UPDATE'?'CAMBIO':'BAJA'}</span> <b>${esc(x.tabla)}</b> #${esc(x.fila||'')}<br><small class=mut>${new Date(x.fecha).toLocaleString('es-AR')} · ${esc(U[x.usuario]||(x.usuario?'usuario eliminado':'sistema / panel de Supabase'))}</small><br><small>${esc(sm(x))}</small></div></div>`).join('')||'<p class=mut>No hay movimientos con esos filtros.</p>'}
+ ${au.length>=AF.n?'<button class="btn s" id=av>Ver más</button>':''}`;
+ const re=()=>{AF.t=at.value;AF.o=ao.value;AF.d=ad.value;AF.q=aq.value;auditoria()};at.onchange=ao.onchange=ad.onchange=re;aq.onchange=re;
+ if(gid('av'))av.onclick=()=>{AF.n+=200;auditoria()}}
 
 let IMD=90;
 async function inmov(){
