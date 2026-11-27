@@ -551,6 +551,8 @@ p{margin:0}
 }
 .producto-desc{font-size:12px;color:#6b625a;margin:2px 0 6px;line-height:1.35;white-space:pre-line}
 a[href="#catalogo"],[data-vista="catalogo"],#vistaCatalogo{display:none!important}
+.hero-tarjetas{display:flex!important;justify-content:center;flex-wrap:wrap}.hero-tarjeta{flex:0 1 226px}
+@media(max-width:600px){.hero-tarjeta{flex:1 1 calc(50% - 8px);min-width:140px}}
 </style>
 </head>
 <body>
@@ -828,6 +830,7 @@ a[href="#catalogo"],[data-vista="catalogo"],#vistaCatalogo{display:none!importan
   <div class="carrito-resumen">
     <div class="carrito-total"><span>Total</span><span id="totalCarrito">$0</span></div>
     <div class="carrito-envio-nota" id="envioNotaCarrito"></div>
+    <button class="btn btn-primario" style="width:100%;margin-bottom:8px;display:none" id="btnEnviarSistema">Enviar pedido a Central Pack</button>
     <button class="btn btn-primario" style="width:100%" id="btnEnviarPedido">Enviar pedido por WhatsApp</button>
   </div>
 </div>
@@ -2091,6 +2094,17 @@ function enviarPedido(){
   window.open(`https://wa.me/${CONFIG.whatsapp}?text=${msg}`, "_blank");
 }
 
+async function enviarPedidoSistema(){
+  const items=[];
+  productos.forEach(p=>{const c=cantidades[p.codigo]||0;if(c>0)items.push({codigo:p.codigo,cantidad:c})});
+  if(!items.length){mostrarToast("Agregá al menos un producto antes de enviar el pedido");return}
+  const {error}=await sb.rpc('enviar_pedido_web',{p_items:items,p_nota:''});
+  if(error){mostrarToast(error.message);return}
+  items.forEach(i=>{cantidades[i.codigo]=0});
+  actualizarTodo();cerrarCarrito();
+  mostrarToast("¡Recibimos tu pedido! Te lo confirmamos a la brevedad.");
+}
+
 /* ================= CARRITO: abrir / cerrar ================= */
 function abrirCarrito(){
   document.getElementById("panelCarrito").classList.add("activo");
@@ -2106,6 +2120,7 @@ document.getElementById("fabCarrito").addEventListener("click", abrirCarrito);
 document.getElementById("cerrarCarrito").addEventListener("click", cerrarCarrito);
 document.getElementById("backdrop").addEventListener("click", ()=>{ cerrarCarrito(); cerrarAdminOverlays(); });
 document.getElementById("btnEnviarPedido").addEventListener("click", enviarPedido);
+document.getElementById("btnEnviarSistema").addEventListener("click", enviarPedidoSistema);
 
 /* ================= BUSQUEDA / ORDEN ================= */
 document.getElementById("inputBuscar").addEventListener("input", (e)=>{
@@ -2307,6 +2322,7 @@ async function aplicarSesion(user){
   document.getElementById("sesionDot").classList.toggle("activa", !!user);
   document.getElementById("btnLoginNav").title = user ? `Sesión: ${user.email}` : "Iniciar sesión";
   await cargarCatalogo();
+  const bs=document.getElementById("btnEnviarSistema");if(bs)bs.style.display=(clienteHabilitado&&!esAdmin)?"":"none";
 }
 sb.auth.onAuthStateChange((ev, session)=>{
   if(ev==='TOKEN_REFRESHED') return;
