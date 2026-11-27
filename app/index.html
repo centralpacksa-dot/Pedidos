@@ -511,14 +511,14 @@ async function auditoria(){
 
 async function compras(){
  if(!admin){main.innerHTML='<p>Solo el administrador.</p>';return}
- const[cp,ci,pv,pr]=await Promise.all([all(()=>sb.from('compras').select('id,fecha,proveedor_id,flete,flete_metodo').order('id',{ascending:false})),all(()=>sb.from('compra_items').select('compra_id,producto_id,cantidad,costo_unitario,descuento')),all(()=>sb.from('proveedores').select('id,nombre')),prodsAll()]);
+ const[cp,ci,pv,pr]=await Promise.all([all(()=>sb.from('compras').select('id,fecha,proveedor_id,flete,flete_metodo,solo_registro').order('id',{ascending:false})),all(()=>sb.from('compra_items').select('compra_id,producto_id,cantidad,costo_unitario,descuento')),all(()=>sb.from('proveedores').select('id,nombre')),prodsAll()]);
  const PV=Object.fromEntries(pv.map(x=>[x.id,x.nombre])),NM=Object.fromEntries(pr.map(x=>[x.id,x.nombre])),T={},N={},PN={};
  ci.forEach(x=>{T[x.compra_id]=(T[x.compra_id]||0)+x.cantidad*x.costo_unitario-(x.descuento||0);N[x.compra_id]=(N[x.compra_id]||0)+1;PN[x.compra_id]=(PN[x.compra_id]||'')+' '+(NM[x.producto_id]||'')});
  main.innerHTML=`<a href="#/mas">← Más</a><h2>Compras</h2><a class=btn href="#/compra" style="display:block;text-align:center;text-decoration:none">+ Registrar compra</a>
  <div class=grid><label>Desde<input type=date id=cd1></label><label>Hasta<input type=date id=cd2></label></div><input id=cq placeholder="Buscar por proveedor o producto…"><p class=mut id=cnn></p><div id=cls></div>`;
  const draw=()=>{const t=norm(cq.value),L=cp.filter(x=>(!cd1.value||x.fecha>=cd1.value)&&(!cd2.value||x.fecha<=cd2.value)&&(!t||inc(norm((PV[x.proveedor_id]||'')+' '+(PN[x.id]||'')+' '+x.id),t)));
   cnn.textContent=L.length+' compra(s) · costo total '+money(L.reduce((a,x)=>a+(T[x.id]||0)+(+x.flete||0),0));
-  cls.innerHTML=L.slice(0,150).map(x=>`<a class=row href="#/compraedit/${x.id}" style="text-decoration:none;color:inherit"><div><b>Compra #${x.id}</b> · ${x.fecha}<br><small class=mut>${esc(PV[x.proveedor_id]||'Sin proveedor')} · ${N[x.id]||0} producto(s)${x.flete>0?' · flete '+money(x.flete):''}</small></div><b>${money((T[x.id]||0)+(+x.flete||0))}</b></a>`).join('')||'<p class=mut>No hay compras con esos filtros.</p>'};
+  cls.innerHTML=L.slice(0,150).map(x=>`<a class=row href="#/compraedit/${x.id}" style="text-decoration:none;color:inherit"><div><b>Compra #${x.id}</b> · ${x.fecha}<br><small class=mut>${esc(PV[x.proveedor_id]||'Sin proveedor')} · ${N[x.id]||0} producto(s)${x.flete>0?' · flete '+money(x.flete):''}${x.solo_registro?' · <span class="tag">Solo registro</span>':''}</small></div><b>${money((T[x.id]||0)+(+x.flete||0))}</b></a>`).join('')||'<p class=mut>No hay compras con esos filtros.</p>'};
  cd1.onchange=cd2.onchange=cq.oninput=draw;restore('compras',['cd1','cd2','cq']);draw()}
 async function compraedit(id){
  if(!admin){main.innerHTML='<p>Solo el administrador.</p>';return}
@@ -530,6 +530,7 @@ async function compraedit(id){
  main.innerHTML=`<a href="#/compras">← Compras</a><h2>Compra #${c.id}</h2>
  <div class=grid><label>Fecha<input type=date id=ef value="${c.fecha}"></label><label>Proveedor<select id=epv><option value="">Sin proveedor</option>${pv.map(x=>`<option value=${x.id} ${x.id===c.proveedor_id?'selected':''}>${esc(x.nombre)}</option>`).join('')}</select></label>
  <label>Flete<input type=number step=any inputmode=decimal id=efl value="${c.flete}"></label><label>Repartir el flete por<select id=efm>${O('bultos','Bultos (packs)',c.flete_metodo)}${O('unidades','Unidades',c.flete_metodo)}${O('valor','Valor',c.flete_metodo)}</select></label></div>
+ ${c.solo_registro?'<p><span class="tag">Solo registro</span> <small class=mut>Esta compra no mueve stock ni costos.</small></p>':(!it.length?'<label style="display:flex;gap:8px;align-items:center;color:var(--n);font-size:16px"><input type=checkbox id=eso style="width:auto;margin:0"> Compra vieja: solo dejar el registro (no modifica el stock ni los costos actuales)</label>':'')}
  <h3>Productos</h3><div id=lns></div><input id=cb placeholder="Agregar un producto a la compra…"><div id=cr></div>
  <p class=mut><small>Al cambiar cantidades o costos se ajustan el stock y el lote. Lo que ya se vendió conserva el costo con que se vendió, y no podés dejar menos unidades de las que ya salieron.</small></p>
  <button class=btn id=sv>Guardar cambios</button><button class="btn s" id=del style="color:#a00;border-color:#a00">Eliminar compra</button><p id=m class=err></p>`;
@@ -545,6 +546,7 @@ async function compraedit(id){
  sv.onclick=async()=>{m.className='err';m.textContent='Guardando…';
   if(!L.length&&!NU.length)return m.textContent='La compra no puede quedar sin productos (si querés, eliminala).';
   const items=[...L.map(x=>({id:x.id,cantidad:x.cantidad,costo_unitario:x.costo_unitario,descuento:x.descuento||0})),...NU.map(x=>({producto_id:x.id,cantidad:x.c,costo_unitario:x.p,descuento:x.d||0}))];
+  if(!c.solo_registro&&gid('eso')&&gid('eso').checked){const{error:e9}=await sb.rpc('marcar_compra_solo_registro',{p_compra:+id,p_valor:true});if(e9)return m.textContent=e9.message}
   const{error}=await sb.rpc('editar_compra',{p_compra:+id,p_fecha:ef.value,p_proveedor:epv.value?+epv.value:null,p_flete:parseFloat(efl.value)||0,p_metodo:efm.value,p_items:items});
   if(error)return m.textContent=error.message;P=null;PA=null;ST=null;m.className='';m.textContent='✔ Compra actualizada. Stock y lotes ajustados.';setTimeout(()=>compraedit(id),700)};
  del.onclick=async()=>{if(!confirm('¿Eliminar la compra #'+id+'? Se quitan su stock y sus lotes.\n\nEl costo actual de los productos no se revierte solo.'))return;const{error}=await sb.rpc('eliminar_compra',{p_compra:+id});if(error){m.className='err';return m.textContent=error.message}P=null;PA=null;ST=null;location.hash='#/compras'}}
@@ -726,6 +728,7 @@ async function compra(){
  const[pv,p,co]=await Promise.all([all(()=>sb.from('proveedores').select('id,nombre').order('nombre')),prods(),all(()=>sb.from('productos_costos').select('producto_id,costo_pack,costo_unitario'))]);
  const C=Object.fromEntries(co.map(x=>[x.producto_id,x]));
  main.innerHTML=`<a href="#/mas">← Más</a><h2>Registrar compra</h2><label>Fecha<input type=date id=cf value="${hoy()}"></label><label>Proveedor<select id=pv><option value="">Elegir…</option>${pv.map(x=>`<option value=${x.id}>${esc(x.nombre)}</option>`).join('')}</select></label><input id=pn placeholder="…o escribí un proveedor nuevo"><label>Flete / transporte<input id=fl type=number step=any inputmode=decimal></label><label>Repartir el flete por<select id=fm><option value=bultos>Bultos (packs) — recomendado</option><option value=unidades>Unidades</option><option value=valor>Valor de los productos</option></select></label>
+ <label style="display:flex;gap:8px;align-items:center;color:var(--n);font-size:16px"><input type=checkbox id=cso style="width:auto;margin:0"> Compra vieja: solo dejar el registro (no modifica el stock ni los costos actuales)</label><div id=cnw style="display:none"><label>Número de compra (opcional, para completar un número que falta)<input id=cnum type=number inputmode=numeric></label></div>
  <input id=q placeholder="Buscar producto…"><div id=res></div><div id=ls></div><div id=tt class=tot></div><button class=btn id=ok>Guardar compra</button><p id=m class=err></p>`;
  const cst=x=>x.m==='p'?(C[x.id]?.costo_pack||(C[x.id]?.costo_unitario||0)*x.cp):(C[x.id]?.costo_unitario||0);
  const tot=()=>tt.textContent='Total '+money(cartC.reduce((a,x)=>a+x.c*x.co,0));
@@ -736,15 +739,15 @@ async function compra(){
  ls.onclick=e=>{const d=e.target.dataset.d;if(d!=null){cartC.splice(d,1);lines()}};
  q.oninput=()=>{const t=norm(q.value);res.innerHTML=t?p.filter(x=>inc(norm(x.nombre+' '+x.codigo),t)).slice(0,8).map(x=>`<div class=row data-a=${x.id} style="cursor:pointer"><div><b>${esc(x.nombre)}</b><br><small>stock ${x.stock}</small></div><b>＋</b></div>`).join(''):''};
  res.onclick=e=>{const r=e.target.closest('[data-a]');if(!r)return;const x=p.find(y=>y.id==r.dataset.a);if(!cartC.find(y=>y.id===x.id)){const k=x.unidad==='Pack'&&x.cantidad_pack>1,it={id:x.id,n:x.nombre,k,cp:x.cantidad_pack,m:k?'p':'u',c:1,co:0};it.co=cst(it);cartC.unshift(it)}q.value='';res.innerHTML='';lines()};
- lines();
+ lines();cso.onchange=()=>{cnw.style.display=cso.checked?'':'none'};
  ok.onclick=async()=>{m.className='err';if(!cartC.length||cartC.some(x=>!(x.c>0)))return m.textContent='Agregá productos con cantidad válida';
   ok.disabled=true;m.textContent='Guardando…';let pid=pv.value?+pv.value:null;
   if(pn.value.trim()){const{data,error}=await sb.from('proveedores').insert({nombre:pn.value.trim()}).select('id').single();if(error){ok.disabled=false;return m.textContent=error.message}pid=data.id}
-  const{data:cp,error:e1}=await sb.from('compras').insert({fecha:cf.value||hoy(),proveedor_id:pid,flete:parseFloat(fl.value)||0,flete_metodo:fm.value}).select('id').single();
-  if(e1){ok.disabled=false;return m.textContent=e1.message}
+  const{data:cp,error:e1}=await sb.from('compras').insert({...(cso.checked?{solo_registro:true}:{}),...(cso.checked&&cnum.value?{id:+cnum.value}:{}),fecha:cf.value||hoy(),proveedor_id:pid,flete:parseFloat(fl.value)||0,flete_metodo:fm.value}).select('id').single();
+  if(e1){ok.disabled=false;return m.textContent=/duplicate|unique|already/i.test(e1.message)?'Ya existe la compra #'+cnum.value+'. Abrila desde Compras y, si está vacía, marcala como solo registro.':e1.message}
   const{error:e2}=await sb.from('compra_items').insert(cartC.map(x=>({compra_id:cp.id,producto_id:x.id,cantidad:x.m==='p'?x.c*x.cp:x.c,costo_unitario:x.m==='p'?x.co/x.cp:x.co})));
   if(e2){await sb.from('compras').delete().eq('id',cp.id);ok.disabled=false;return m.textContent='No se guardó: '+e2.message}
-  cartC=[];P=null;m.className='';m.textContent='✔ Compra #'+cp.id+' guardada. El stock y los lotes se actualizaron.';lines();ok.disabled=false}}
+  cartC=[];P=null;m.className='';m.textContent=cso.checked?'✔ Compra #'+cp.id+' guardada solo como registro: no se tocó el stock ni los costos.':'✔ Compra #'+cp.id+' guardada. El stock y los lotes se actualizaron.';lines();ok.disabled=false}}
 async function pedido(){
  const[cs,p]=await Promise.all([all(()=>sb.from('clientes').select('id,codigo,nombre').eq('activo',true).order('nombre')),prods()]);
  main.innerHTML=`<h2>Nuevo pedido</h2><div id=wsb></div><label>Cliente<input id=clq list=cll placeholder="Buscar por nombre o código…" autocomplete=off><datalist id=cll>${cs.map(c=>`<option value="${esc(c.codigo)} · ${esc(c.nombre)}">`).join('')}</datalist></label><select id=cl hidden><option value=""></option>${cs.map(c=>`<option value=${c.id}>${esc(c.codigo)} · ${esc(c.nombre)}</option>`).join('')}</select><button class="btn s" id=nc>+ Nuevo cliente</button><div id=ncf></div>
